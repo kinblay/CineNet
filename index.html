@@ -1,1 +1,598 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>CineNet 🎬</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--gold:#D4A017;--red:#C1121F;--blue:#1a3a6e;--bg:#05050f;--card:#0f0f20;--card2:#161628;--text:#eee;--muted:#778899;--purple:#7F77DD;--green:#22c55e}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden}
+.scr{display:none;flex-direction:column;align-items:center;justify-content:flex-start;padding:16px;height:100dvh;overflow-y:auto;max-width:480px;margin:0 auto}
+.scr.on{display:flex}
+/* SPLASH - cinema canvas */
+#s-splash{background:#000;padding:0;justify-content:center;position:relative}
+#splash-canvas{width:100%;height:100dvh;display:block}
+#skip-btn{position:absolute;bottom:20px;right:16px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);border:none;padding:8px 16px;border-radius:8px;font-size:.8rem;cursor:pointer;letter-spacing:1px;font-family:serif}
+/* GENERAL */
+.logo{font-size:3.2rem;font-weight:900;color:var(--gold);letter-spacing:-2px;margin:10px 0 2px;text-align:center}
+.logo b{color:var(--red)}
+.sub{color:var(--muted);font-size:1rem;margin-bottom:14px;text-align:center}
+.big{font-size:1.5rem;font-weight:700}
+.mt{margin-top:4px}
+.w-full{width:100%;max-width:460px}
+.btn{display:block;width:100%;padding:18px;border:none;border-radius:14px;font-size:1.1rem;font-weight:700;cursor:pointer;margin:5px 0;transition:transform .15s;touch-action:manipulation;min-height:60px}
+.btn:hover{transform:translateY(-2px)}.btn:active{transform:scale(.98)}
+.btn-gold{background:var(--gold);color:#000}.btn-red{background:var(--red);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-ghost{background:rgba(255,255,255,.07);color:var(--text)}
+.btn-ghost:hover{background:rgba(255,255,255,.12)}
+.btn-green{background:#1a5c1a;color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+/* ZONE selector */
+.zone-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:460px;margin-bottom:12px}
+.zone-btn{background:rgba(255,255,255,.05);border:2px solid transparent;border-radius:12px;padding:14px 6px;color:var(--text);cursor:pointer;font-size:.88rem;font-weight:600;transition:all .2s;text-align:center;touch-action:manipulation;min-height:50px}
+.zone-btn.sel{border-color:var(--gold);background:rgba(212,160,23,.12);color:var(--gold)}
+.zone-btn.wide{grid-column:1/-1}
+/* GAME */
+.lv-bar{display:flex;gap:5px;margin:10px 0;flex-wrap:wrap;justify-content:center;width:100%;max-width:460px}
+.lv-dot{flex:1;min-width:22px;height:6px;border-radius:3px;background:rgba(255,255,255,.1)}
+.lv-dot.done{background:var(--green)}.lv-dot.cur{background:var(--gold)}.lv-dot.fail{background:var(--red)}
+.lv-info{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:460px;margin-bottom:6px}
+.lv-name{font-weight:700;color:var(--gold);font-size:1.1rem}.lv-desc{font-size:.88rem;color:var(--muted);margin-top:2px}
+.lives{font-size:1.4rem;letter-spacing:3px}
+.score-disp{font-size:2.2rem;font-weight:900;color:var(--gold);text-align:center}
+.t-num{text-align:right;font-size:.8rem;color:var(--muted);margin-top:3px}
+.play-btn{background:var(--gold);color:#000;border:none;border-radius:50%;width:72px;height:72px;font-size:2rem;cursor:pointer;margin:12px 0;display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(212,160,23,.4);transition:transform .15s;touch-action:manipulation}
+.play-btn:active{transform:scale(.93)}
+.hint-box{background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.25);border-radius:10px;padding:10px 14px;font-size:.88rem;color:var(--gold);text-align:center;width:100%;max-width:460px;margin:5px 0}
+.choices{display:grid;grid-template-columns:1fr;gap:8px;width:100%;max-width:460px;margin-top:8px}
+.choice-btn{background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);border-radius:14px;padding:16px 18px;color:var(--text);font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s;touch-action:manipulation;text-align:left}
+.choice-btn:hover{border-color:var(--gold);background:rgba(212,160,23,.08)}
+.choice-btn.correct{border-color:var(--green);background:rgba(34,197,94,.15);color:var(--green)}
+.choice-btn.wrong{border-color:var(--red);background:rgba(193,18,31,.15);color:var(--red)}
+/* Film poster card */
+.film-card{background:var(--card2);border-radius:12px;padding:12px;display:flex;align-items:center;gap:12px;width:100%;max-width:460px;margin:6px 0;border:.5px solid rgba(255,255,255,.08)}
+.film-poster{width:48px;height:68px;border-radius:6px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.film-info{flex:1}.film-title{font-weight:700;font-size:.95rem}.film-year{font-size:.78rem;color:var(--muted)}
+/* GAMEOVER */
+.go-sub{color:var(--muted);font-size:.88rem;margin:5px 0 14px;text-align:center}
+.res-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.83rem}
+/* SHARE CARD */
+.share-card{background:var(--card);border:1px solid rgba(212,160,23,.3);border-radius:16px;padding:16px;width:100%;max-width:460px;text-align:center;margin:10px 0}
+.share-title{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.share-score{font-size:1.6rem;font-weight:900;color:var(--gold)}
+.share-grid{display:flex;gap:4px;justify-content:center;margin:8px 0;flex-wrap:wrap}
+.share-dot{width:22px;height:22px;border-radius:5px}
+/* RANKINGS */
+.rlist{width:100%;max-width:460px}.rrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:.5px solid rgba(255,255,255,.06)}
+.rpos{width:28px;text-align:center;font-weight:900;color:var(--muted)}.rname{flex:1;font-weight:600;font-size:.88rem}.rscore{font-weight:700;color:var(--gold);font-size:.88rem}
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99;align-items:center;justify-content:center;padding:20px}
+.modal.on{display:flex}
+.modal-box{background:var(--card2);border:1px solid rgba(212,160,23,.2);border-radius:20px;padding:24px;width:100%;max-width:380px;text-align:center}
+.modal-title{font-size:1.4rem;font-weight:900;color:var(--gold);margin-bottom:8px}
+.modal-sub{font-size:.85rem;color:var(--muted);line-height:1.7;margin-bottom:18px}
+.modal-features{text-align:left;background:rgba(255,255,255,.04);border-radius:12px;padding:12px 14px;margin-bottom:18px;font-size:.82rem;color:var(--text);line-height:2}
+.modal-note{display:none;font-size:.78rem;background:rgba(212,160,23,.08);border:.5px solid rgba(212,160,23,.2);border-radius:8px;padding:8px 12px;margin-bottom:8px;color:var(--muted);line-height:1.5;text-align:left}
+/* RANK WIDGET */
+#m-rank-widget{width:100%;background:rgba(212,160,23,.08);border:.5px solid rgba(212,160,23,.25);border-radius:12px;padding:10px 14px;margin-bottom:10px;text-align:left}
+/* LVL10 CLUE */
+#g-lvl10-clue{display:none;width:100%;max-width:460px;background:rgba(212,160,23,.08);border:.5px solid rgba(212,160,23,.25);border-radius:10px;padding:10px 14px;margin:6px 0;text-align:left}
+/* DEEZER LINK */
+#go-deezer-wrap{display:none;width:100%;max-width:460px;margin-top:8px;text-align:center}
+</style>
+</head>
+<body>
 
+<!-- SPLASH -->
+<div id="s-splash" class="scr on">
+  <canvas id="splash-canvas"></canvas>
+  <button id="skip-btn">Salta →</button>
+</div>
+
+<!-- LANG / ZONE SELECTOR -->
+<div id="s-zone" class="scr">
+  <div class="logo">Cine<b>Net</b></div>
+  <div class="sub">🎬 Endevina la banda sonora</div>
+  <div class="zone-grid" id="zone-grid"></div>
+  <p style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:8px" id="zone-hint"></p>
+</div>
+
+<!-- MENU -->
+<div id="s-menu" class="scr">
+  <div id="m-rank-widget"></div>
+  <div class="logo">Cine<b>Net</b></div>
+  <div class="sub" id="m-sub"></div>
+  <div class="big" id="m-hello"></div>
+  <div class="muted mt" id="m-zone" style="margin-bottom:14px"></div>
+  <div id="m-daily-style" style="font-size:.72rem;font-weight:600;color:var(--gold);text-align:center;margin-bottom:4px;letter-spacing:.3px"></div>
+  <button class="btn btn-gold w-full" id="m-btn-daily" onclick="onDaily()"></button>
+  <button class="btn btn-red w-full" id="m-btn-free" onclick="onFree()"></button>
+  <button class="btn btn-blue w-full" id="m-btn-autor" onclick="onAutor()"></button>
+  <button class="btn btn-ghost w-full" id="m-btn-challenge" onclick="go('s-challenge-create')"></button>
+  <div style="border-top:.5px solid rgba(255,255,255,.08);width:100%;max-width:460px;margin:10px 0"></div>
+  <button class="btn btn-ghost w-full" style="opacity:.9;border:1.5px solid rgba(134,239,172,.35);background:rgba(134,239,172,.07);position:relative" onclick="showWip('familia')">👨‍👩‍👧 Mode Família <span style="position:absolute;top:-8px;right:10px;background:#22c55e;color:#000;font-size:.55rem;font-weight:900;padding:2px 7px;border-radius:99px">AVIAT</span></button>
+  <button class="btn btn-ghost w-full" style="opacity:.7" onclick="showWip('ranking')">🏆 Rànquing</button>
+  <button class="btn btn-ghost w-full" style="opacity:.5;font-size:.85rem" onclick="go('s-zone')">🌍 Canvia idioma</button>
+  <div style="font-size:.65rem;color:var(--muted);margin-top:8px;text-align:center">v0.1 · kinblay.github.io/CineNet</div>
+</div>
+
+<!-- GAME -->
+<div id="s-game" class="scr">
+  <div class="lv-bar" id="g-lv-bar"></div>
+  <div class="lv-info w-full">
+    <div><div class="lv-name" id="g-lv-name"></div><div class="lv-desc" id="g-lv-desc"></div></div>
+    <div><div class="lives" id="g-lives"></div><div class="t-num" id="g-timer"></div></div>
+  </div>
+  <div class="score-disp" id="g-score">0</div>
+  <button class="play-btn" id="g-play" onclick="onPlay()">▶</button>
+  <div class="hint-box" id="g-hint" style="display:none"><span id="g-hint-txt"></span></div>
+  <div id="g-lvl10-clue"></div>
+  <div class="choices" id="g-choices"></div>
+  <button class="btn btn-ghost w-full" style="margin-top:8px;font-size:.8rem;opacity:.6" onclick="onListenFull()" id="g-listen-full"></button>
+</div>
+
+<!-- GAME OVER -->
+<div id="s-gameover" class="scr">
+  <div style="font-size:3rem;margin:10px 0" id="go-emoji">🎬</div>
+  <div style="font-size:1.6rem;font-weight:900;margin-bottom:4px" id="go-title"></div>
+  <div class="go-sub" id="go-sub"></div>
+  <div style="background:var(--card2);border-radius:14px;padding:16px;width:100%;max-width:460px;margin-bottom:12px">
+    <div style="text-align:center;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">PUNTUACIÓ FINAL</div>
+    <div style="text-align:center;font-size:3rem;font-weight:900;color:var(--gold)" id="go-score"></div>
+    <div style="text-align:center;font-size:.8rem;color:var(--muted);margin-top:4px" id="go-lvl-reached"></div>
+    <div style="margin-top:12px" id="go-res"></div>
+  </div>
+  <div id="go-deezer-wrap">
+    <a id="go-deezer-link" href="#" target="_blank" rel="noopener" style="display:inline-block;background:rgba(26,195,136,.12);border:.5px solid rgba(26,195,136,.35);color:#1ac37c;font-size:.85rem;font-weight:600;padding:10px 20px;border-radius:10px;text-decoration:none">🎧 Escolta a Deezer</a>
+    <div id="go-deezer-songs" style="margin-top:8px;font-size:.75rem;color:var(--muted)"></div>
+  </div>
+  <div class="share-card" id="go-share-card">
+    <div class="share-title">CINENET · <span id="sh-date"></span></div>
+    <div class="share-score">🏆 <span id="sh-score"></span> pts</div>
+    <div style="font-size:.72rem;color:var(--gold);margin-top:2px" id="sh-rank"></div>
+    <div class="share-grid" id="sh-grid"></div>
+    <div style="font-size:.8rem;color:var(--muted)" id="sh-streak"></div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:4px" id="sh-zone"></div>
+  </div>
+  <div class="w-full">
+    <button class="btn btn-gold w-full" id="go-share-btn" onclick="onShare()"></button>
+    <button class="btn btn-red w-full" id="go-again-btn" onclick="onFree()"></button>
+    <button class="btn btn-ghost w-full" id="go-menu-btn" onclick="go('s-menu')"></button>
+  </div>
+</div>
+
+<!-- CHALLENGE CREATE -->
+<div id="s-challenge-create" class="scr">
+  <div class="logo" style="font-size:2rem">⚔️ Repte</div>
+  <p class="sub" id="ch-sub"></p>
+  <button class="btn btn-gold w-full" id="ch-create-btn" onclick="onCreateChallenge()"></button>
+  <button class="btn btn-ghost w-full" id="ch-pending-btn" onclick="loadPendingChallenges()"></button>
+  <div id="ch-pending-list" style="width:100%;max-width:460px;margin-top:8px"></div>
+  <button class="btn btn-ghost w-full" onclick="go('s-menu')" id="ch-back-btn"></button>
+</div>
+
+<!-- MODAL WIP -->
+<div class="modal" id="modal-wip">
+  <div class="modal-box">
+    <div class="modal-title" id="wip-title"></div>
+    <div class="modal-sub" id="wip-sub"></div>
+    <div class="modal-note" id="wip-note"></div>
+    <div class="modal-features" id="wip-features"></div>
+    <button class="btn btn-gold" onclick="document.getElementById('modal-wip').classList.remove('on')">D'acord!</button>
+  </div>
+</div>
+
+<!-- MODAL CONFIRM -->
+<div class="modal" id="modal-confirm">
+  <div class="modal-box">
+    <div class="modal-title" id="conf-title"></div>
+    <div class="modal-sub" id="conf-msg"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('modal-confirm').classList.remove('on')" id="conf-cancel"></button>
+      <button class="btn btn-gold" style="flex:1" id="conf-ok"></button>
+    </div>
+  </div>
+</div>
+
+<audio id="dz-audio" preload="auto"></audio>
+
+<script>
+// ═══════════════════════════════════════
+// CINENET — MOTOR PRINCIPAL
+// ═══════════════════════════════════════
+
+// ── SUPABASE ──
+const SB_URL='https://ikfouhxdtkptafglthmd.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlrb3VoeGR0a3B0YWZnbHRobWQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcxMDAwMDAwMCwiZXhwIjoyMDI1NjE2MDAwfQ.placeholder';
+async function sbFetch(path,opts={}){
+  try{const r=await fetch(SB_URL+path,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...(opts.headers||{})},...opts});return r.ok?await r.json():null}catch(e){return null}
+}
+
+// ── TRANSLATIONS ──
+const T={
+  ca:{appName:'CineNet',appSub:'🎬 Endevina la banda sonora',hello:'Bona pel·lícula,',daily:'🎬 Pel·lícula del dia',free:'🎮 Partida lliure',autor:'🎬 Director d\'Autor',challenge:'⚔️ Repte a un amic',shareBtn:'📤 Comparteix el resultat',playAgain:'🎬 Jugar de nou',mainMenu:'🏠 Menú principal',correct:'✅ Correcte!',wrong:'❌ Incorrecte',listenFull:'🎵 Escoltar sencer',clueLabel:'💡 Pista final:',clueDefault:'Banda sonora molt reconeixible',listenDeezer:'🎧 Escolta a Deezer',dailyPlayed:'Ja has jugat la pel·lícula d\'avui!',zoneLabel:'Idioma / Zona',zonePick:'Tria el teu idioma',
+    lvls:[{n:'10 segons',d:'Fragment llarg — fàcil'},{n:'8 segons',d:'Fragment mig'},{n:'6 segons',d:'Fragment curt'},{n:'5 segons',d:'Fragment curt'},{n:'4 segons',d:'Fragment molt curt'},{n:'3 segons',d:'Fragmentet'},{n:'5 segons',d:'Sense pistes'},{n:'4 segons',d:'Sense pistes'},{n:'Velocitat 0.5x',d:'Melodia a mig tempo'},{n:'🔥 Repte final',d:'Velocitat 1.75x + pista escrita'}],
+    zones:[{id:'ca',label:'🎵 Català',desc:'Bandes sonores favorites'},{id:'es',label:'🎸 Espanyol',desc:'Cine espanyol i llatinoamericà'},{id:'eu',label:'🌍 Europeu',desc:'Cinema europeu i clàssics'},{id:'int',label:'🌐 Internacional',desc:'Hollywood i world cinema'}],
+    rankLabel:'Rang actual',levelBadge:{daily:'📅 Diària',free:'🎮 Lliure',autor:'🎬 Autor',challenge:'⚔️ Repte'}},
+  es:{appName:'CineNet',appSub:'🎬 Adivina la banda sonora',hello:'¡Buena peli,',daily:'🎬 Película del día',free:'🎮 Partida libre',autor:'🎬 Director de Autor',challenge:'⚔️ Reto a un amigo',shareBtn:'📤 Compartir resultado',playAgain:'🎬 Jugar de nuevo',mainMenu:'🏠 Menú principal',correct:'✅ ¡Correcto!',wrong:'❌ Incorrecto',listenFull:'🎵 Escuchar completo',clueLabel:'💡 Pista final:',clueDefault:'Banda sonora muy reconocible',listenDeezer:'🎧 Escuchar en Deezer',dailyPlayed:'¡Ya has jugado la película de hoy!',zoneLabel:'Idioma / Zona',zonePick:'Elige tu idioma',
+    lvls:[{n:'10 segundos',d:'Fragmento largo'},{n:'8 segundos',d:'Fragmento medio'},{n:'6 segundos',d:'Fragmento corto'},{n:'5 segundos',d:'Fragmento corto'},{n:'4 segundos',d:'Muy corto'},{n:'3 segundos',d:'Fragmentito'},{n:'5 segundos',d:'Sin pistas'},{n:'4 segundos',d:'Sin pistas'},{n:'Velocidad 0.5x',d:'Melodía a medio tempo'},{n:'🔥 Reto final',d:'Velocidad 1.75x + pista'}],
+    zones:[{id:'ca',label:'🎵 Catalán',desc:'Bandas sonoras favoritas'},{id:'es',label:'🎸 Español',desc:'Cine español y latinoamericano'},{id:'eu',label:'🌍 Europeo',desc:'Cine europeo y clásicos'},{id:'int',label:'🌐 Internacional',desc:'Hollywood y world cinema'}],
+    rankLabel:'Rango actual',levelBadge:{daily:'📅 Diaria',free:'🎮 Libre',autor:'🎬 Autor',challenge:'⚔️ Reto'}},
+  eu:{appName:'CineNet',appSub:'🎬 Guess the soundtrack',hello:'Good movie,',daily:'🎬 Movie of the day',free:'🎮 Free game',autor:'🎬 Director mode',challenge:'⚔️ Challenge a friend',shareBtn:'📤 Share result',playAgain:'🎬 Play again',mainMenu:'🏠 Main menu',correct:'✅ Correct!',wrong:'❌ Wrong',listenFull:'🎵 Listen full',clueLabel:'💡 Final clue:',clueDefault:'Very recognizable soundtrack',listenDeezer:'🎧 Listen on Deezer',dailyPlayed:'You already played today!',zoneLabel:'Language / Zone',zonePick:'Pick your language',
+    lvls:[{n:'10 seconds',d:'Long — easy'},{n:'8 seconds',d:'Medium'},{n:'6 seconds',d:'Short'},{n:'5 seconds',d:'Short'},{n:'4 seconds',d:'Very short'},{n:'3 seconds',d:'Tiny'},{n:'5 seconds',d:'No hints'},{n:'4 seconds',d:'No hints'},{n:'Speed 0.5x',d:'Half tempo'},{n:'🔥 Final',d:'Speed 1.75x + clue'}],
+    zones:[{id:'ca',label:'🎵 Catalan',desc:'Favourite soundtracks'},{id:'es',label:'🎸 Spanish',desc:'Spanish & Latin cinema'},{id:'eu',label:'🌍 European',desc:'European cinema & classics'},{id:'int',label:'🌐 International',desc:'Hollywood & world cinema'}],
+    rankLabel:'Current rank',levelBadge:{daily:'📅 Daily',free:'🎮 Free',autor:'🎬 Author',challenge:'⚔️ Challenge'}},
+  int:{appName:'CineNet',appSub:'🎬 Guess the soundtrack',hello:'Good movie,',daily:'🎬 Movie of the day',free:'🎮 Free game',autor:'🎬 Director mode',challenge:'⚔️ Challenge a friend',shareBtn:'📤 Share result',playAgain:'🎬 Play again',mainMenu:'🏠 Main menu',correct:'✅ Correct!',wrong:'❌ Wrong',listenFull:'🎵 Listen full',clueLabel:'💡 Final clue:',clueDefault:'Very recognizable soundtrack',listenDeezer:'🎧 Listen on Deezer',dailyPlayed:'You already played today!',zoneLabel:'Language / Zone',zonePick:'Pick your language',
+    lvls:[{n:'10 seconds',d:'Long — easy'},{n:'8 seconds',d:'Medium'},{n:'6 seconds',d:'Short'},{n:'5 seconds',d:'Short'},{n:'4 seconds',d:'Very short'},{n:'3 seconds',d:'Tiny'},{n:'5 seconds',d:'No hints'},{n:'4 seconds',d:'No hints'},{n:'Speed 0.5x',d:'Half tempo'},{n:'🔥 Final',d:'Speed 1.75x + clue'}],
+    zones:[{id:'ca',label:'🎵 Catalan',desc:'Favourite soundtracks'},{id:'es',label:'🎸 Spanish',desc:'Spanish & Latin cinema'},{id:'eu',label:'🌍 European',desc:'European cinema & classics'},{id:'int',label:'🌐 International',desc:'Hollywood & world cinema'}],
+    rankLabel:'Current rank',levelBadge:{daily:'📅 Daily',free:'🎮 Free',autor:'🎬 Author',challenge:'⚔️ Challenge'}}
+};
+
+// ── LEVELS ──
+const LEVELS=[{tl:55,dur:10},{tl:45,dur:8},{tl:40,dur:6},{tl:35,dur:5},{tl:30,dur:4},{tl:28,dur:3},{tl:24,dur:5},{tl:22,dur:4},{tl:20,dur:3},{tl:18,dur:2}];
+
+// ── DEEZER ENGINE ──
+const DZ_SEGS=[{start:8,dur:10,rate:1.0},{start:8,dur:8,rate:1.0},{start:10,dur:6,rate:1.0},{start:10,dur:5,rate:1.0},{start:12,dur:4,rate:1.0},{start:12,dur:3,rate:1.0},{start:8,dur:5,rate:1.0},{start:12,dur:4,rate:1.0},{start:14,dur:3,rate:0.5},{start:14,dur:2,rate:1.75}];
+const dzPrevCache={};
+function getDzPreview(dzId){return new Promise(resolve=>{if(dzPrevCache[dzId]){resolve(dzPrevCache[dzId]);return}const cb='dzcb_'+dzId+'_'+Date.now();window[cb]=(data)=>{delete window[cb];document.getElementById('dz_sc_'+dzId)?.remove();const url=data?.preview||null;if(url)dzPrevCache[dzId]=url;resolve(url);};const s=document.createElement('script');s.id='dz_sc_'+dzId;s.src=`https://api.deezer.com/track/${dzId}?output=jsonp&callback=${cb}`;s.onerror=()=>{delete window[cb];resolve(null)};document.head.appendChild(s);})}
+async function dzPlay(film,lvIdx){const audio=document.getElementById('dz-audio');if(!audio||!film?.dzId||film.dzId===0)return false;const seg=DZ_SEGS[lvIdx]||DZ_SEGS[0];const url=await getDzPreview(film.dzId);if(!url)return false;audio.pause();audio.src=url;audio.playbackRate=seg.rate||1;audio.load();const play=()=>{try{audio.currentTime=seg.start}catch(e){}audio.play().catch(()=>{});clearTimeout(ytStopTimer);ytStopTimer=setTimeout(()=>{audio.pause();onSegEnd()},seg.dur*1000*(1/seg.rate)+400);};if(audio.readyState>=2)play();else audio.addEventListener('canplay',play,{once:true});return true}
+function dzStop(){const a=document.getElementById('dz-audio');if(a){a.pause();a.src=''}}
+
+// ── RANKS ──
+const RANKS={
+  ca:[{min:0,name:'🎟️ Espectador',short:'Espectador'},{min:500,name:'🍿 Cinèfil',short:'Cinèfil'},{min:1500,name:'📽️ Aficionat',short:'Aficionat'},{min:3000,name:'🎞️ Crític',short:'Crític'},{min:6000,name:'🎬 Guionista',short:'Guionista'},{min:10000,name:'🎭 Director',short:'Director'},{min:16000,name:'⭐ Estrella',short:'Estrella'},{min:25000,name:'🏆 Productor',short:'Productor'},{min:40000,name:'🎖️ Llegenda',short:'Llegenda'},{min:60000,name:'🦁 Immortal',short:'Immortal'}],
+  es:[{min:0,name:'🎟️ Espectador',short:'Espectador'},{min:500,name:'🍿 Cinéfilo',short:'Cinéfilo'},{min:1500,name:'📽️ Aficionado',short:'Aficionado'},{min:3000,name:'🎞️ Crítico',short:'Crítico'},{min:6000,name:'🎬 Guionista',short:'Guionista'},{min:10000,name:'🎭 Director',short:'Director'},{min:16000,name:'⭐ Estrella',short:'Estrella'},{min:25000,name:'🏆 Productor',short:'Productor'},{min:40000,name:'🎖️ Leyenda',short:'Leyenda'},{min:60000,name:'🦁 Inmortal',short:'Inmortal'}],
+  eu:[{min:0,name:'🎟️ Viewer',short:'Viewer'},{min:500,name:'🍿 Film buff',short:'Film buff'},{min:1500,name:'📽️ Fan',short:'Fan'},{min:3000,name:'🎞️ Critic',short:'Critic'},{min:6000,name:'🎬 Screenwriter',short:'Screenwriter'},{min:10000,name:'🎭 Director',short:'Director'},{min:16000,name:'⭐ Star',short:'Star'},{min:25000,name:'🏆 Producer',short:'Producer'},{min:40000,name:'🎖️ Legend',short:'Legend'},{min:60000,name:'🦁 Immortal',short:'Immortal'}],
+  int:[{min:0,name:'🎟️ Viewer',short:'Viewer'},{min:500,name:'🍿 Film buff',short:'Film buff'},{min:1500,name:'📽️ Fan',short:'Fan'},{min:3000,name:'🎞️ Critic',short:'Critic'},{min:6000,name:'🎬 Screenwriter',short:'Screenwriter'},{min:10000,name:'🎭 Director',short:'Director'},{min:16000,name:'⭐ Star',short:'Star'},{min:25000,name:'🏆 Producer',short:'Producer'},{min:40000,name:'🎖️ Legend',short:'Legend'},{min:60000,name:'🦁 Immortal',short:'Immortal'}]
+};
+function getTotalScore(){try{return parseInt(localStorage.getItem('cn:total_score_cine')||'0')}catch(e){return 0}}
+function addTotalScore(pts){try{localStorage.setItem('cn:total_score_cine',String(getTotalScore()+pts))}catch(e){}}
+function getRank(lang){const r=RANKS[lang]||RANKS.int,p=getTotalScore();let rk=r[0];for(const x of r)if(p>=x.min)rk=x;return rk}
+function getRankProgress(lang){const r=RANKS[lang]||RANKS.int,p=getTotalScore();let i=0;for(let j=0;j<r.length;j++)if(p>=r[j].min)i=j;const cur=r[i],nxt=r[i+1];if(!nxt)return{rank:cur,pct:100,pts:p,next:null,needed:0};return{rank:cur,pct:Math.round(((p-cur.min)/(nxt.min-cur.min))*100),pts:p,next:nxt,needed:nxt.min-p}}
+function renderRankWidget(){const prog=getRankProgress(G.lang),el=document.getElementById('m-rank-widget');if(!el)return;const nxt=prog.next?`<span style="font-size:.7rem;color:var(--muted)">${prog.needed.toLocaleString()} pts → ${prog.next.short}</span>`:`<span style="font-size:.7rem;color:var(--gold)">Rang màxim!</span>`;el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><span style="font-size:.95rem;font-weight:700;color:var(--gold)">${prog.rank.name}</span><span style="font-size:.75rem;color:var(--muted)">${prog.pts.toLocaleString()} pts</span></div><div style="background:rgba(255,255,255,.1);border-radius:99px;height:6px;overflow:hidden;margin-bottom:3px"><div style="height:100%;width:${prog.pct}%;background:linear-gradient(90deg,var(--gold),var(--red));border-radius:99px;transition:width .5s"></div></div>${nxt}`}
+
+// ── WIP DATA ──
+const WIP_DATA={
+  familia:{title:'👨‍👩‍👧 Mode Família',sub:'Juga tots junts al sofà amb un codi compartit.',features:['📺 Fins a 8 jugadors al mateix dispositiu','🎬 Rànquing familiar en temps real','👶 Modes adaptats per edats','🏠 Codi de sala de 6 lletres'],note:'Pròximament! Suggereix pel·lícules per la bústia.'},
+  ranking:{title:'🏆 Rànquing Global',sub:'Compara la teva puntuació amb la resta.',features:['🌍 Rànquing global','📅 Rànquing diari','🎬 Top per director','📊 Estadístiques personals'],note:'Pròximament!'}
+};
+function showWip(type){const d=WIP_DATA[type]||{title:'Pròximament',sub:'Aviat!',features:[]};document.getElementById('wip-title').textContent=d.title;document.getElementById('wip-sub').textContent=d.sub;document.getElementById('wip-features').innerHTML=d.features.map(f=>`<div>✦ ${esc(f)}</div>`).join('');const ne=document.getElementById('wip-note');if(ne){ne.style.display=d.note?'block':'none';if(d.note)ne.textContent=d.note;}document.getElementById('modal-wip').classList.add('on')}
+
+// ── CATALOG (DEMO — cal omplir amb BSO reals) ──
+// Estructura: id, t (títol peli), a (director/compositor), y (any), lang, dzId, pista6
+const FILMS=[
+  // Internacional
+  {id:1,t:'The Lion King',a:'Hans Zimmer',y:1994,lang:'int',dzId:1109838442,st:'adventure'},
+  {id:2,t:'Titanic',a:'James Horner',y:1997,lang:'int',dzId:909236,st:'drama'},
+  {id:3,t:'Star Wars',a:'John Williams',y:1977,lang:'int',dzId:470845252,st:'adventure'},
+  {id:4,t:'Jurassic Park',a:'John Williams',y:1993,lang:'int',dzId:1109736882,st:'adventure'},
+  {id:5,t:'Schindler\'s List',a:'John Williams',y:1993,lang:'int',dzId:4059007,st:'drama'},
+  {id:6,t:'The Dark Knight',a:'Hans Zimmer',y:2008,lang:'int',dzId:640612,st:'action'},
+  {id:7,t:'Interstellar',a:'Hans Zimmer',y:2014,lang:'int',dzId:89560714,st:'scifi'},
+  {id:8,t:'Pirates of the Caribbean',a:'Hans Zimmer',y:2003,lang:'int',dzId:1109828852,st:'adventure'},
+  {id:9,t:'Forrest Gump',a:'Alan Silvestri',y:1994,lang:'int',dzId:1109826742,st:'drama'},
+  {id:10,t:'Harry Potter',a:'John Williams',y:2001,lang:'int',dzId:1109734772,st:'fantasy'},
+  {id:11,t:'Indiana Jones',a:'John Williams',y:1981,lang:'int',dzId:1109732662,st:'adventure'},
+  {id:12,t:'Gladiator',a:'Hans Zimmer',y:2000,lang:'int',dzId:14729252,st:'epic'},
+  {id:13,t:'The Lord of the Rings',a:'Howard Shore',y:2001,lang:'int',dzId:1109839552,st:'fantasy'},
+  {id:14,t:'Back to the Future',a:'Alan Silvestri',y:1985,lang:'int',dzId:1109737992,st:'adventure'},
+  {id:15,t:'Mission: Impossible',a:'Lalo Schifrin',y:1996,lang:'int',dzId:14416922,st:'action'},
+  {id:16,t:'The Godfather',a:'Nino Rota',y:1972,lang:'int',dzId:3135556,st:'drama'},
+  {id:17,t:'James Bond - Goldfinger',a:'John Barry',y:1964,lang:'int',dzId:64516282,st:'action'},
+  {id:18,t:'Rocky',a:'Bill Conti',y:1976,lang:'int',dzId:4070267,st:'sport'},
+  {id:19,t:'E.T.',a:'John Williams',y:1982,lang:'int',dzId:1109731552,st:'fantasy'},
+  {id:20,t:'Jaws',a:'John Williams',y:1975,lang:'int',dzId:1109730442,st:'thriller'},
+  // Europeu
+  {id:101,t:'Cinema Paradiso',a:'Ennio Morricone',y:1988,lang:'eu',dzId:636850,st:'drama'},
+  {id:102,t:'The Good the Bad and the Ugly',a:'Ennio Morricone',y:1966,lang:'eu',dzId:1109840662,st:'western'},
+  {id:103,t:'Amélie',a:'Yann Tiersen',y:2001,lang:'eu',dzId:635494,st:'drama'},
+  {id:104,t:'La vita è bella',a:'Nicola Piovani',y:1997,lang:'eu',dzId:1109843882,st:'drama'},
+  {id:105,t:'Schindler\'s List',a:'John Williams',y:1993,lang:'eu',dzId:4059007,st:'drama'},
+  {id:106,t:'The Pianist',a:'Chopin / Kilar',y:2002,lang:'eu',dzId:1109845992,st:'drama'},
+  {id:107,t:'Il buono, il brutto, il cattivo',a:'Ennio Morricone',y:1966,lang:'eu',dzId:1109840662,st:'western'},
+  {id:108,t:'Das Boot',a:'Klaus Doldinger',y:1981,lang:'eu',dzId:1109846002,st:'war'},
+  // Espanyol
+  {id:201,t:'Bigas Luna - Jamón Jamón',a:'Nicola Piovani',y:1992,lang:'es',dzId:0,st:'drama'},
+  {id:202,t:'El laberinto del fauno',a:'Javier Navarrete',y:2006,lang:'es',dzId:1109850002,st:'fantasy'},
+  {id:203,t:'Todo sobre mi madre',a:'Alberto Iglesias',y:1999,lang:'es',dzId:0,st:'drama'},
+  {id:204,t:'Volver',a:'Alberto Iglesias',y:2006,lang:'es',dzId:0,st:'drama'},
+  // Català
+  {id:301,t:'Pa negre',a:'Sergi Casamitjana',y:2010,lang:'ca',dzId:0,st:'drama'},
+  {id:302,t:'El gran Gato',a:'Various',y:2023,lang:'ca',dzId:0,st:'comedy'},
+].filter(f=>f.dzId!==0||true); // keep all for structure
+
+const FILMS_BY_LANG={
+  int:FILMS.filter(f=>f.lang==='int'),
+  eu:FILMS.filter(f=>f.lang==='eu'),
+  es:FILMS.filter(f=>f.lang==='es'),
+  ca:FILMS.filter(f=>f.lang==='ca'),
+};
+
+// ── GAME STATE ──
+const G={lang:'int',nick:'',lvl:1,lives:3,score:0,active:false,mode:'free',filmList:[],filmIdx:0,film:null,results:[],tLeft:0,tMax:0,choices:[],answerIsBonus:false,style:null,zone:'',timerInt:null};
+let actx,ytStopTimer,splashDone=false;
+
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function toast(msg,dur=2000){let el=document.getElementById('toast-el');if(!el){el=document.createElement('div');el.id='toast-el';el.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:10px;font-size:.88rem;z-index:200;pointer-events:none;transition:opacity .3s';document.body.appendChild(el)}el.textContent=msg;el.style.opacity='1';clearTimeout(el._t);el._t=setTimeout(()=>el.style.opacity='0',dur)}
+function go(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0);soundNav();}
+function seededShuffle(arr,seed){const a=[...arr];let s=seed%2147483647;for(let i=a.length-1;i>0;i--){s=(s*16807)%2147483647;const j=s%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+
+// ── SOUNDS ──
+function getACtxUI(){try{if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();return actx}catch(e){return null}}
+function playNote(ctx,freq,start,dur,vol=0.18,type='sine'){const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(0,start);g.gain.linearRampToValueAtTime(vol,start+0.01);g.gain.exponentialRampToValueAtTime(0.001,start+dur);o.connect(g);g.connect(ctx.destination);o.start(start);o.stop(start+dur+0.05)}
+function soundNav(){const ctx=getACtxUI();if(!ctx)return;const t=ctx.currentTime;const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(700,t+0.1);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.05,t+0.02);g.gain.exponentialRampToValueAtTime(0.001,t+0.12);o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+0.15)}
+function soundCorrect(){const ctx=getACtxUI();if(!ctx)return;const t=ctx.currentTime;playNote(ctx,523.25,t,0.15,0.2,'triangle');playNote(ctx,783.99,t+0.12,0.25,0.2,'triangle');playNote(ctx,1046.5,t+0.26,0.35,0.18,'triangle')}
+function soundWrong(){const ctx=getACtxUI();if(!ctx)return;const t=ctx.currentTime;playNote(ctx,220,t,0.15,0.18,'sawtooth');playNote(ctx,174.61,t+0.1,0.2,0.15,'sawtooth')}
+function soundLevelUp(){const ctx=getACtxUI();if(!ctx)return;const t=ctx.currentTime;[392,523.25,659.25,783.99].forEach((f,i)=>{playNote(ctx,f,t+i*0.1,0.25,0.15,'triangle')})}
+function soundBonus(){const ctx=getACtxUI();if(!ctx)return;const t=ctx.currentTime;[1047,1319,1568,2093].forEach((f,i)=>{playNote(ctx,f,t+i*0.08,0.15,0.12,'square')})}
+
+// ── CINEMATIC SPLASH ──
+function initCinematicSplash(){
+  const cv=document.getElementById('splash-canvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width=cv.offsetWidth||380;
+  const H=cv.height=cv.offsetHeight||window.innerHeight;
+  const CX=W/2,CY=H/2;
+  let frame=0,phase=0,pf=0,done=false,animId=null;
+  Math.clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  function ease(t){return t<.5?2*t*t:(4-2*t)*t-1}
+  function grain(alpha){const id=ctx.createImageData(W,H);for(let i=0;i<id.data.length;i+=4){const n=(Math.random()-.5)*50;id.data[i]=id.data[i+1]=id.data[i+2]=128+n;id.data[i+3]=alpha*255}ctx.putImageData(id,0,0)}
+  function filmBorder(){ctx.fillStyle='#000';ctx.fillRect(0,0,W,16);ctx.fillRect(0,H-16,W,16);for(let x=10;x<W;x+=22){ctx.fillStyle='#111';ctx.fillRect(x-4,2,9,11);ctx.fillRect(x-4,H-14,9,11)}}
+  function countdown(num,prog){
+    ctx.fillStyle='#0d0d0d';ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(CX,CY,70,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle='rgba(212,160,23,.8)';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(CX,CY,70,-Math.PI/2,-Math.PI/2+Math.PI*2*prog);ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.moveTo(CX-90,CY);ctx.lineTo(CX+90,CY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(CX,CY-90);ctx.lineTo(CX,CY+90);ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 72px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(num),CX,CY+2);
+    filmBorder();ctx.globalAlpha=0.04;grain(1);ctx.globalAlpha=1;
+  }
+  function curtain(prog){
+    ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+    const open=ease(Math.clamp(prog*2,0,1));
+    const cw=W*0.5*(1-open);
+    if(cw>0){
+      ctx.fillStyle='#2a0000';ctx.fillRect(0,0,cw,H);
+      ctx.fillStyle='#2a0000';ctx.fillRect(W-cw,0,cw,H);
+      for(let i=1;i<5;i++){const lx=cw*i/4;ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(lx,0);ctx.lineTo(lx,H);ctx.stroke();ctx.beginPath();ctx.moveTo(W-lx,0);ctx.lineTo(W-lx,H);ctx.stroke()}
+    }
+    // Spotlight
+    const sa=Math.clamp((prog-.3)*3,0,1);
+    if(sa>0){const sg=ctx.createRadialGradient(CX,0,0,CX,CY,H*.7);sg.addColorStop(0,`rgba(255,230,160,${sa*.25})`);sg.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=sg;ctx.fillRect(0,0,W,H)}
+  }
+  function titleScreen(prog){
+    ctx.fillStyle='#05050f';ctx.fillRect(0,0,W,H);
+    // Stars
+    for(let i=0;i<50;i++){const sx=(i*137)%W,sy=(i*89)%H,sa=Math.clamp(prog*3-.2,0,1)*((i%3===0)?.7:.25);ctx.fillStyle=`rgba(255,240,180,${sa})`;ctx.beginPath();ctx.arc(sx,sy,i%7===0?1.2:.5,0,Math.PI*2);ctx.fill()}
+    // Reel icon
+    const ra=Math.clamp(prog*2,0,1);const ry=CY-100;
+    ctx.globalAlpha=ra;ctx.strokeStyle='#D4A017';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(CX,ry,24,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.arc(CX,ry,7,0,Math.PI*2);ctx.stroke();
+    for(let a=0;a<6;a++){const ag=a*Math.PI/3;ctx.beginPath();ctx.moveTo(CX+9*Math.cos(ag),ry+9*Math.sin(ag));ctx.lineTo(CX+22*Math.cos(ag),ry+22*Math.sin(ag));ctx.stroke()}
+    ctx.globalAlpha=1;
+    // Title
+    const tp=ease(Math.clamp((prog-.15)*2,0,1));
+    ctx.globalAlpha=tp;
+    // CINE in gold
+    ctx.font=`bold ${Math.round(W*.16)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='#D4A017';ctx.fillText('CINE',CX-W*.095,CY);
+    // Net in red
+    ctx.fillStyle='#C1121F';ctx.fillText('Net',CX+W*.115,CY);
+    // Tagline
+    const tga=Math.clamp((prog-.4)*3,0,1);
+    ctx.globalAlpha=tga*tp;ctx.fillStyle='rgba(212,160,23,.65)';ctx.font=`${Math.round(W*.034)}px serif`;ctx.fillText('ENDEVINA LA BANDA SONORA',CX,CY+52);
+    // Stars row
+    ctx.fillStyle='rgba(255,210,80,.5)';ctx.font='11px serif';
+    [-60,-30,0,30,60].forEach(ox=>{ctx.fillText('★',CX+ox,CY+76)});
+    ctx.globalAlpha=1;
+    filmBorder();ctx.globalAlpha=0.025;grain(1);ctx.globalAlpha=1;
+  }
+  const PHASES=[
+    {dur:80,fn:(f)=>countdown(3,1-f/80)},
+    {dur:80,fn:(f)=>countdown(2,1-f/80)},
+    {dur:80,fn:(f)=>countdown(1,1-f/80)},
+    {dur:100,fn:(f)=>curtain(1-f/100)},
+    {dur:160,fn:(f)=>titleScreen(1-f/160)},
+  ];
+  function finish(){done=true;titleScreen(1);document.getElementById('skip-btn').style.display='none';setTimeout(()=>exitSplash(),800)}
+  function tick(){if(done)return;const ph=PHASES[phase];ph.fn(ph.dur-pf);pf++;if(pf>=ph.dur){phase++;pf=0;if(phase>=PHASES.length){finish();return}}animId=requestAnimationFrame(tick)}
+  document.getElementById('skip-btn').onclick=()=>{done=true;if(animId)cancelAnimationFrame(animId);titleScreen(1);setTimeout(()=>exitSplash(),400)};
+  // Splash sound on first interaction
+  cv.addEventListener('click',()=>{try{const c=new(window.AudioContext||window.webkitAudioContext)();actx=c;const t=c.currentTime;const mel=[261.63,329.63,392,523.25,659.25,783.99,1046.5];mel.forEach((f,i)=>{playNote(c,f,t+i*0.13,0.5,0.12,'triangle')});playNote(c,1046.5,t+0.9,1.0,0.18,'triangle')}catch(e){}},{once:true});
+  animId=requestAnimationFrame(tick);
+}
+function exitSplash(){splashDone=true;const lang=localStorage.getItem('cn:lang_cine')||null;if(lang){G.lang=lang;G.nick=localStorage.getItem('cn:nick_cine')||'';go('s-menu');renderMenu()}else{go('s-zone');renderZoneScreen()}}
+
+// ── ZONE SCREEN ──
+function renderZoneScreen(){
+  const t=T[G.lang]||T.int;
+  document.querySelector('#s-zone .sub').textContent=t.zonePick;
+  const grid=document.getElementById('zone-grid');
+  const zones=t.zones;
+  grid.innerHTML=zones.map(z=>`<button class="zone-btn" onclick="selectZone('${z.id}')">${z.label}<br><span style="font-size:.72rem;color:var(--muted)">${z.desc}</span></button>`).join('');
+  const hint=document.getElementById('zone-hint');
+  if(hint)hint.textContent='Pots canviar-ho des del menú en qualsevol moment';
+}
+function selectZone(lang){
+  G.lang=lang;
+  const t=T[lang];
+  localStorage.setItem('cn:lang_cine',lang);
+  const nick=localStorage.getItem('cn:nick_cine');
+  if(nick){G.nick=nick;go('s-menu');renderMenu()}
+  else{
+    const n=prompt(lang==='ca'?'Com et dius?':lang==='es'?'¿Cómo te llamas?':'Your name?','');
+    G.nick=n&&n.trim()?n.trim().slice(0,20):'Cinèfil';
+    localStorage.setItem('cn:nick_cine',G.nick);
+    go('s-menu');renderMenu();
+  }
+}
+
+// ── MENU ──
+function renderMenu(){
+  const t=T[G.lang];
+  renderRankWidget();
+  document.getElementById('m-sub').textContent=t.appSub;
+  document.getElementById('m-hello').textContent=`${t.hello} ${G.nick}!`;
+  document.getElementById('m-zone').textContent=t.zones?.find(z=>z.id===G.lang)?.label||'';
+  document.getElementById('m-btn-daily').textContent=t.daily;
+  document.getElementById('m-btn-free').textContent=t.free;
+  document.getElementById('m-btn-autor').textContent=t.autor;
+  document.getElementById('m-btn-challenge').textContent=t.challenge;
+}
+function onDaily(){
+  const today=new Date().toISOString().slice(0,10);
+  if(localStorage.getItem(`cn:daily_cine:${G.lang}:${today}`)===`1`){toast(T[G.lang].dailyPlayed);return}
+  const pool=(FILMS_BY_LANG[G.lang]||[]).filter(f=>f.dzId&&f.dzId!==0);
+  G.mode='daily';
+  initGame(seededShuffle(pool,today.split('').reduce((a,c)=>a+c.charCodeAt(0),0)),'daily');
+}
+function onFree(){
+  const pool=(FILMS_BY_LANG[G.lang]||[]).filter(f=>f.dzId&&f.dzId!==0);
+  G.mode='free';
+  initGame(seededShuffle(pool,Math.floor(Math.random()*999999)),'free');
+}
+function onAutor(){
+  // Director d'autor — cal definir quins films entren
+  toast('Mode Director d\'Autor pròximament!');
+}
+
+// ── GAME INIT ──
+function initGame(list,mode){
+  list=list.filter(f=>f.dzId&&f.dzId!==0);
+  if(list.length<4){toast('Catàleg insuficient per a aquest mode');return}
+  G.lvl=1;G.lives=3;G.score=0;G.active=true;G.mode=mode;G.filmList=list;G.filmIdx=0;G.results=[];G.film=null;
+  go('s-game');renderGame();startLevel();
+}
+function renderGame(){
+  const t=T[G.lang];
+  const bar=document.getElementById('g-lv-bar');
+  bar.innerHTML=Array.from({length:10},(_,i)=>`<div class="lv-dot${i+1<G.lvl?' done':i+1===G.lvl?' cur':''}${G.results[i]==='fail'?' fail':''}" id="lv-dot-${i+1}"></div>`).join('');
+  document.getElementById('g-lives').textContent='❤️'.repeat(G.lives)+'🖤'.repeat(Math.max(0,3-G.lives));
+  document.getElementById('g-score').textContent=G.score;
+  const lv=t.lvls[G.lvl-1]||t.lvls[0];
+  document.getElementById('g-lv-name').textContent=`Nivell ${G.lvl}/10 — ${lv.n}`;
+  document.getElementById('g-lv-desc').textContent=lv.d;
+  document.getElementById('g-listen-full').textContent=t.listenFull;
+}
+function startLevel(){
+  ytStop(true);
+  const cl=document.getElementById('g-lvl10-clue');
+  if(cl){if(G.lvl===10&&G.film){const tl=T[G.lang];cl.style.display='block';cl.innerHTML=`<span style="font-size:.72rem;font-weight:600;color:var(--gold);text-transform:uppercase">💡 ${tl.clueLabel}</span><br><span style="font-size:.88rem;line-height:1.5">${esc(G.film.pista6||tl.clueDefault)}</span>`;}else cl.style.display='none';}
+  // Pick film
+  if(G.filmIdx>=G.filmList.length)G.filmIdx=0;
+  G.film=G.filmList[G.filmIdx++];
+  // Generate 4 choices
+  const others=G.filmList.filter(f=>f.id!==G.film.id).sort(()=>Math.random()-.5).slice(0,3);
+  G.choices=[G.film,...others].sort(()=>Math.random()-.5);
+  const ch=document.getElementById('g-choices');
+  ch.innerHTML=G.choices.map(f=>`<button class="choice-btn" onclick="onChoice(${f.id})">${esc(f.t)} <span style="font-size:.75rem;color:var(--muted)">(${f.y})</span></button>`).join('');
+  document.getElementById('g-hint').style.display='none';
+  document.getElementById('g-play').textContent='▶';
+  // Timer
+  G.tMax=LEVELS[G.lvl-1]?.tl||40;G.tLeft=G.tMax;G.active=true;
+  clearInterval(G.timerInt);
+  G.timerInt=setInterval(()=>{G.tLeft--;document.getElementById('g-timer').textContent=`⏱ ${G.tLeft}s`;if(G.tLeft<=0){clearInterval(G.timerInt);onTimeout()}},1000);
+}
+function onPlay(){
+  dzPlay(G.film,G.lvl-1);
+  document.getElementById('g-play').textContent='⏹';
+}
+function ytStop(silent){clearTimeout(ytStopTimer);dzStop();if(!silent)onSegEnd()}
+function onSegEnd(){document.getElementById('g-play').textContent='▶'}
+function stopAll(){clearInterval(G.timerInt);ytStop(true)}
+function onTimeout(){if(!G.active)return;G.active=false;stopAll();G.lives--;G.results[G.lvl-1]='fail';toast(T[G.lang].wrong);revealAnswer();setTimeout(()=>nextLvl(),1800)}
+function onChoice(filmId){
+  if(!G.active)return;
+  if(filmId===G.film.id)onCorrect();else onWrong();
+}
+function onCorrect(){
+  if(!G.active)return;G.active=false;stopAll();
+  const pts=100+G.tLeft*2+G.lvl*25;soundCorrect();
+  G.score+=pts;G.results[G.lvl-1]='ok';
+  toast(`${T[G.lang].correct} +${pts}`);
+  // Highlight correct
+  document.querySelectorAll('.choice-btn').forEach(btn=>{if(btn.textContent.includes(G.film.t))btn.classList.add('correct')});
+  document.getElementById('g-score').textContent=G.score;
+  setTimeout(()=>nextLvl(),1200);
+}
+function onWrong(){
+  if(!G.active)return;G.active=false;stopAll();soundWrong();
+  G.lives--;G.results[G.lvl-1]='fail';
+  toast(T[G.lang].wrong);revealAnswer();
+  document.getElementById('g-lives').textContent='❤️'.repeat(Math.max(0,G.lives))+'🖤'.repeat(Math.max(0,3-G.lives));
+  setTimeout(()=>nextLvl(),1800);
+}
+function revealAnswer(){
+  document.querySelectorAll('.choice-btn').forEach(btn=>{
+    if(btn.textContent.includes(G.film.t))btn.classList.add('correct');
+    else btn.classList.add('wrong');
+  });
+}
+function nextLvl(){
+  if(G.lives<=0||G.lvl>=10){endGame();return}
+  soundLevelUp();G.lvl++;renderGame();startLevel();
+}
+function endGame(){
+  stopAll();addTotalScore(G.score);
+  const today=new Date().toISOString().slice(0,10);
+  if(G.mode==='daily')localStorage.setItem(`cn:daily_cine:${G.lang}:${today}`,'1');
+  const t=T[G.lang];
+  const pct=G.results.filter(r=>r==='ok').length/10;
+  document.getElementById('go-emoji').textContent=pct>=0.8?'🏆':pct>=0.5?'🎬':'🎟️';
+  document.getElementById('go-title').textContent=pct>=0.8?'Cineasta expert!':pct>=0.5?'Bona partida!':'Segueix intentant-ho!';
+  document.getElementById('go-sub').textContent=`${G.results.filter(r=>r==='ok').length}/10 pel·lícules encertades`;
+  document.getElementById('go-score').textContent=G.score;
+  document.getElementById('go-lvl-reached').textContent=`Fins al nivell ${G.lvl}/10`;
+  document.getElementById('go-res').innerHTML=G.filmList.slice(0,G.lvl).map((f,i)=>`<div class="res-row"><span>${G.results[i]==='ok'?'✅':'❌'} ${i+1}. ${esc(f.t)}</span><span style="color:var(--muted)">${f.y}</span></div>`).join('');
+  // Share card
+  const gameNum=today.replace(/-/g,'').slice(2);
+  document.getElementById('sh-date').textContent=`#${gameNum}`;
+  document.getElementById('sh-score').textContent=G.score;
+  if(document.getElementById('sh-rank'))document.getElementById('sh-rank').textContent=getRank(G.lang).short;
+  document.getElementById('sh-grid').innerHTML=G.results.map(r=>`<div class="share-dot" style="background:${r==='ok'?'#22c55e':r==='fail'?'#C1121F':'#333'}"></div>`).join('');
+  const streak=parseInt(localStorage.getItem('cn:streak_cine')||'0');
+  document.getElementById('sh-streak').textContent=streak>0?`🔥 ${streak} dies`:'' ;
+  document.getElementById('sh-zone').textContent=`🎬 CineNet · ${t.zones?.find(z=>z.id===G.lang)?.label||''}`;
+  // Deezer link
+  const dzW=document.getElementById('go-deezer-wrap');
+  if(dzW&&G.mode==='free'){dzW.style.display='block';const ls=G.filmList[G.filmIdx-1]||G.film;if(ls?.dzId)document.getElementById('go-deezer-link').href=`https://www.deezer.com/track/${ls.dzId}`;document.getElementById('go-deezer-songs').innerHTML=G.filmList.slice(0,G.lvl).filter(f=>f?.dzId&&f.dzId!==0).map(f=>`<a href="https://www.deezer.com/track/${f.dzId}" target="_blank" rel="noopener" style="color:#1ac37c;text-decoration:none;margin:2px 4px;display:inline-block">🎬 ${esc(f.t)}</a>`).join('')}
+  else if(dzW)dzW.style.display='none';
+  const gob=document.getElementById('go-again-btn');if(gob)gob.textContent=t.playAgain;
+  const gsb=document.getElementById('go-share-btn');if(gsb)gsb.textContent=t.shareBtn;
+  const gmb=document.getElementById('go-menu-btn');if(gmb)gmb.textContent=t.mainMenu;
+  go('s-gameover');
+}
+function onShare(){
+  const t=T[G.lang];
+  const grid=G.results.map(r=>r==='ok'?'🟩':'🟥').join('');
+  const streak=parseInt(localStorage.getItem('cn:streak_cine')||'0');
+  const rank=getRank(G.lang).short;
+  const txt=`🎬 CineNet\n${grid}\n🏆 ${G.score} pts · ${rank}${streak>1?`\n🔥 ${streak} dies`:''}\n🎬 kinblay.github.io/CineNet/`;
+  if(navigator.share){navigator.share({text:txt}).catch(()=>{})}
+  else{navigator.clipboard?.writeText(txt).then(()=>toast('📋 Copiat!'));}}
+function onListenFull(){if(!G.film)return;if(G.film.dzId&&G.film.dzId!==0){const a=document.getElementById('dz-audio');getDzPreview(G.film.dzId).then(url=>{if(url){a.pause();a.src=url;a.playbackRate=1;a.load();a.addEventListener('canplay',()=>{a.currentTime=0;a.play().catch(()=>{})},{once:true});clearTimeout(ytStopTimer);ytStopTimer=setTimeout(()=>a.pause(),31000)}});toast(T[G.lang].listenFull)}}
+function onCreateChallenge(){toast('Repte pròximament!')}
+function loadPendingChallenges(){toast('Pròximament!')}
+
+// ── BACK BUTTON ──
+window.addEventListener('popstate',()=>{const cur=document.querySelector('.scr.on');if(cur&&cur.id!=='s-menu'&&cur.id!=='s-splash'&&cur.id!=='s-zone'){go('s-menu');renderMenu()}});
+document.querySelectorAll('.scr').forEach(s=>s.addEventListener('touchstart',()=>{history.pushState({},'','');},{once:true}));
+
+// ── INIT ──
+window.addEventListener('load',()=>{
+  const cv=document.getElementById('splash-canvas');
+  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  initCinematicSplash();
+});
+window.addEventListener('resize',()=>{const cv=document.getElementById('splash-canvas');if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}});
+</script>
+</body>
+</html>
