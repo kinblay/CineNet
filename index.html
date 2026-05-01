@@ -31,7 +31,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
 .btn-blue{background:var(--blue);color:#fff}
 .btn-ghost{background:rgba(255,255,255,.07);color:var(--text)}
 .btn-ghost:hover{background:rgba(255,255,255,.12)}
-.btn-green{background:#1a5c1a;color:#fff}
+.btn-green{background:#166534;color:#fff}.btn-orange{background:#b45309;color:#fff}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 /* ZONE selector */
 .zone-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:460px;margin-bottom:12px}
@@ -112,7 +112,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
   <div class="muted mt" id="m-zone" style="margin-bottom:14px"></div>
   <div id="m-daily-style" style="font-size:.72rem;font-weight:600;color:var(--gold);text-align:center;margin-bottom:4px;letter-spacing:.3px"></div>
   <button class="btn btn-gold w-full" id="m-btn-daily" onclick="onDaily()"></button>
-  <button class="btn btn-red w-full" id="m-btn-free" onclick="onFree()"></button>
+  <button class="btn btn-orange w-full" id="m-btn-daily-serie" onclick="onDailySerie()"></button>
+  <button class="btn btn-green w-full" id="m-btn-free" onclick="onFree()"></button>
   <button class="btn btn-blue w-full" id="m-btn-autor" onclick="onAutor()"></button>
   <button class="btn btn-ghost w-full" id="m-btn-challenge" onclick="go('s-challenge-create')"></button>
   <div style="border-top:.5px solid rgba(255,255,255,.08);width:100%;max-width:460px;margin:10px 0"></div>
@@ -162,7 +163,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
   </div>
   <div class="w-full">
     <button class="btn btn-gold w-full" id="go-share-btn" onclick="onShare()"></button>
-    <button class="btn btn-red w-full" id="go-again-btn" onclick="onFree()"></button>
+    <button class="btn btn-green w-full" id="go-again-btn" onclick="onFree()"></button>
     <button class="btn btn-ghost w-full" id="go-menu-btn" onclick="go('s-menu')"></button>
   </div>
 </div>
@@ -216,21 +217,21 @@ async function sbFetch(path,opts={}){
 
 // ── TRANSLATIONS ──
 const T={
-  ca:{appName:'CineNet',appSub:'🎬 Endevina la banda sonora',hello:'Bona pel·lícula,',daily:'🎬 Pel·lícula del dia',free:'🎮 Partida lliure',autor:'🎬 Director d\'Autor',challenge:'⚔️ Repte a un amic',shareBtn:'📤 Comparteix el resultat',playAgain:'🎬 Jugar de nou',mainMenu:'🏠 Menú principal',correct:'✅ Correcte!',wrong:'❌ Incorrecte',listenFull:'🎵 Escoltar sencer',clueLabel:'💡 Pista final:',clueDefault:'Banda sonora molt reconeixible',listenDeezer:'🎧 Escolta a Deezer',dailyPlayed:'Ja has jugat la pel·lícula d\'avui!',zoneLabel:'Idioma / Zona',zonePick:'Tria el teu idioma',
+  ca:{appName:'CineNet',appSub:'🎬 Endevina la banda sonora',hello:'Bona pel·lícula,',daily:'🎬 Pel·lícula del dia',dailySerie:'📺 Sèrie del dia',free:'🎮 Partida lliure',autor:'🎬 Director d\'Autor',challenge:'⚔️ Repte a un amic',shareBtn:'📤 Comparteix el resultat',playAgain:'🎬 Jugar de nou',mainMenu:'🏠 Menú principal',correct:'✅ Correcte!',wrong:'❌ Incorrecte',listenFull:'🎵 Escoltar sencer',clueLabel:'💡 Pista final:',clueDefault:'Banda sonora molt reconeixible',listenDeezer:'🎧 Escolta a Deezer',dailyPlayed:'Ja has jugat la pel·lícula d\'avui!',zoneLabel:'Idioma / Zona',zonePick:'Tria el teu idioma',
     lvls:[{n:'10 segons',d:'Fragment llarg — fàcil'},{n:'8 segons',d:'Fragment mig'},{n:'6 segons',d:'Fragment curt'},{n:'5 segons',d:'Fragment curt'},{n:'4 segons',d:'Fragment molt curt'},{n:'3 segons',d:'Fragmentet'},{n:'5 segons',d:'Sense pistes'},{n:'4 segons',d:'Sense pistes'},{n:'Velocitat 0.5x',d:'Melodia a mig tempo'},{n:'🔥 Repte final',d:'Velocitat 1.75x + pista escrita'}],
-    zones:[{id:'ca',label:'🎵 Català',desc:'Bandes sonores favorites'},{id:'es',label:'🎸 Espanyol',desc:'Cine espanyol i llatinoamericà'},{id:'eu',label:'🌍 Europeu',desc:'Cinema europeu i clàssics'},{id:'int',label:'🌐 Internacional',desc:'Hollywood i world cinema'}],
+    zones:[{id:'ca',label:'🎵 Català',desc:'Cinema català i dirigit per directors catalans'},{id:'es',label:'🎸 Espanyol',desc:'Cinema espanyol i llatinoamericà'},{id:'eu',label:'🌍 Europeu',desc:'Cinema europeu i clàssics'},{id:'int',label:'🌐 Internacional',desc:'Hollywood i cinema mundial'}],
     rankLabel:'Rang actual',levelBadge:{daily:'📅 Diària',free:'🎮 Lliure',autor:'🎬 Autor',challenge:'⚔️ Repte'}},
-  es:{appName:'CineNet',appSub:'🎬 Adivina la banda sonora',hello:'¡Buena peli,',daily:'🎬 Película del día',free:'🎮 Partida libre',autor:'🎬 Director de Autor',challenge:'⚔️ Reto a un amigo',shareBtn:'📤 Compartir resultado',playAgain:'🎬 Jugar de nuevo',mainMenu:'🏠 Menú principal',correct:'✅ ¡Correcto!',wrong:'❌ Incorrecto',listenFull:'🎵 Escuchar completo',clueLabel:'💡 Pista final:',clueDefault:'Banda sonora muy reconocible',listenDeezer:'🎧 Escuchar en Deezer',dailyPlayed:'¡Ya has jugado la película de hoy!',zoneLabel:'Idioma / Zona',zonePick:'Elige tu idioma',
+  es:{appName:'CineNet',appSub:'🎬 Adivina la banda sonora',hello:'¡Buena peli,',daily:'🎬 Película del día',dailySerie:'📺 Serie del día',free:'🎮 Partida libre',autor:'🎬 Director de Autor',challenge:'⚔️ Reto a un amigo',shareBtn:'📤 Compartir resultado',playAgain:'🎬 Jugar de nuevo',mainMenu:'🏠 Menú principal',correct:'✅ ¡Correcto!',wrong:'❌ Incorrecto',listenFull:'🎵 Escuchar completo',clueLabel:'💡 Pista final:',clueDefault:'Banda sonora muy reconocible',listenDeezer:'🎧 Escuchar en Deezer',dailyPlayed:'¡Ya has jugado la película de hoy!',zoneLabel:'Idioma / Zona',zonePick:'Elige tu idioma',
     lvls:[{n:'10 segundos',d:'Fragmento largo'},{n:'8 segundos',d:'Fragmento medio'},{n:'6 segundos',d:'Fragmento corto'},{n:'5 segundos',d:'Fragmento corto'},{n:'4 segundos',d:'Muy corto'},{n:'3 segundos',d:'Fragmentito'},{n:'5 segundos',d:'Sin pistas'},{n:'4 segundos',d:'Sin pistas'},{n:'Velocidad 0.5x',d:'Melodía a medio tempo'},{n:'🔥 Reto final',d:'Velocidad 1.75x + pista'}],
-    zones:[{id:'ca',label:'🎵 Catalán',desc:'Bandas sonoras favoritas'},{id:'es',label:'🎸 Español',desc:'Cine español y latinoamericano'},{id:'eu',label:'🌍 Europeo',desc:'Cine europeo y clásicos'},{id:'int',label:'🌐 Internacional',desc:'Hollywood y world cinema'}],
+    zones:[{id:'ca',label:'🎵 Català',desc:'Cinema català i directors catalans'},{id:'es',label:'🎸 Español',desc:'Cine español y latinoamericano'},{id:'eu',label:'🌍 Europeo',desc:'Cine europeo y clásicos'},{id:'int',label:'🌐 Internacional',desc:'Hollywood y world cinema'}],
     rankLabel:'Rango actual',levelBadge:{daily:'📅 Diaria',free:'🎮 Libre',autor:'🎬 Autor',challenge:'⚔️ Reto'}},
-  eu:{appName:'CineNet',appSub:'🎬 Guess the soundtrack',hello:'Good movie,',daily:'🎬 Movie of the day',free:'🎮 Free game',autor:'🎬 Director mode',challenge:'⚔️ Challenge a friend',shareBtn:'📤 Share result',playAgain:'🎬 Play again',mainMenu:'🏠 Main menu',correct:'✅ Correct!',wrong:'❌ Wrong',listenFull:'🎵 Listen full',clueLabel:'💡 Final clue:',clueDefault:'Very recognizable soundtrack',listenDeezer:'🎧 Listen on Deezer',dailyPlayed:'You already played today!',zoneLabel:'Language / Zone',zonePick:'Pick your language',
+  eu:{appName:'CineNet',appSub:'🎬 Guess the soundtrack',hello:'Good movie,',daily:'🎬 Movie of the day',dailySerie:'📺 Series of the day',free:'🎮 Free game',autor:'🎬 Director mode',challenge:'⚔️ Challenge a friend',shareBtn:'📤 Share result',playAgain:'🎬 Play again',mainMenu:'🏠 Main menu',correct:'✅ Correct!',wrong:'❌ Wrong',listenFull:'🎵 Listen full',clueLabel:'💡 Final clue:',clueDefault:'Very recognizable soundtrack',listenDeezer:'🎧 Listen on Deezer',dailyPlayed:'You already played today!',zoneLabel:'Language / Zone',zonePick:'Pick your language',
     lvls:[{n:'10 seconds',d:'Long — easy'},{n:'8 seconds',d:'Medium'},{n:'6 seconds',d:'Short'},{n:'5 seconds',d:'Short'},{n:'4 seconds',d:'Very short'},{n:'3 seconds',d:'Tiny'},{n:'5 seconds',d:'No hints'},{n:'4 seconds',d:'No hints'},{n:'Speed 0.5x',d:'Half tempo'},{n:'🔥 Final',d:'Speed 1.75x + clue'}],
-    zones:[{id:'ca',label:'🎵 Catalan',desc:'Favourite soundtracks'},{id:'es',label:'🎸 Spanish',desc:'Spanish & Latin cinema'},{id:'eu',label:'🌍 European',desc:'European cinema & classics'},{id:'int',label:'🌐 International',desc:'Hollywood & world cinema'}],
+    zones:[{id:'ca',label:'🎵 Català',desc:'Catalan cinema & directors'},{id:'es',label:'🎸 Spanish',desc:'Spanish & Latin cinema'},{id:'eu',label:'🌍 European',desc:'European cinema & classics'},{id:'int',label:'🌐 International',desc:'Hollywood & world cinema'}],
     rankLabel:'Current rank',levelBadge:{daily:'📅 Daily',free:'🎮 Free',autor:'🎬 Author',challenge:'⚔️ Challenge'}},
   int:{appName:'CineNet',appSub:'🎬 Guess the soundtrack',hello:'Good movie,',daily:'🎬 Movie of the day',free:'🎮 Free game',autor:'🎬 Director mode',challenge:'⚔️ Challenge a friend',shareBtn:'📤 Share result',playAgain:'🎬 Play again',mainMenu:'🏠 Main menu',correct:'✅ Correct!',wrong:'❌ Wrong',listenFull:'🎵 Listen full',clueLabel:'💡 Final clue:',clueDefault:'Very recognizable soundtrack',listenDeezer:'🎧 Listen on Deezer',dailyPlayed:'You already played today!',zoneLabel:'Language / Zone',zonePick:'Pick your language',
     lvls:[{n:'10 seconds',d:'Long — easy'},{n:'8 seconds',d:'Medium'},{n:'6 seconds',d:'Short'},{n:'5 seconds',d:'Short'},{n:'4 seconds',d:'Very short'},{n:'3 seconds',d:'Tiny'},{n:'5 seconds',d:'No hints'},{n:'4 seconds',d:'No hints'},{n:'Speed 0.5x',d:'Half tempo'},{n:'🔥 Final',d:'Speed 1.75x + clue'}],
-    zones:[{id:'ca',label:'🎵 Catalan',desc:'Favourite soundtracks'},{id:'es',label:'🎸 Spanish',desc:'Spanish & Latin cinema'},{id:'eu',label:'🌍 European',desc:'European cinema & classics'},{id:'int',label:'🌐 International',desc:'Hollywood & world cinema'}],
+    zones:[{id:'ca',label:'🎵 Català',desc:'Catalan cinema & directors'},{id:'es',label:'🎸 Spanish',desc:'Spanish & Latin cinema'},{id:'eu',label:'🌍 European',desc:'European cinema & classics'},{id:'int',label:'🌐 International',desc:'Hollywood & world cinema'}],
     rankLabel:'Current rank',levelBadge:{daily:'📅 Daily',free:'🎮 Free',autor:'🎬 Author',challenge:'⚔️ Challenge'}}
 };
 
@@ -264,54 +265,192 @@ const WIP_DATA={
 };
 function showWip(type){const d=WIP_DATA[type]||{title:'Pròximament',sub:'Aviat!',features:[]};document.getElementById('wip-title').textContent=d.title;document.getElementById('wip-sub').textContent=d.sub;document.getElementById('wip-features').innerHTML=d.features.map(f=>`<div>✦ ${esc(f)}</div>`).join('');const ne=document.getElementById('wip-note');if(ne){ne.style.display=d.note?'block':'none';if(d.note)ne.textContent=d.note;}document.getElementById('modal-wip').classList.add('on')}
 
-// ── CATALOG (DEMO — cal omplir amb BSO reals) ──
-// Estructura: id, t (títol peli), a (director/compositor), y (any), lang, dzId, pista6
+// ── CATALOG ──
 const FILMS=[
-  // Internacional
-  {id:1,t:'The Lion King',a:'Hans Zimmer',y:1994,lang:'int',dzId:1109838442,st:'adventure'},
-  {id:2,t:'Titanic',a:'James Horner',y:1997,lang:'int',dzId:909236,st:'drama'},
-  {id:3,t:'Star Wars',a:'John Williams',y:1977,lang:'int',dzId:470845252,st:'adventure'},
-  {id:4,t:'Jurassic Park',a:'John Williams',y:1993,lang:'int',dzId:1109736882,st:'adventure'},
-  {id:5,t:'Schindler\'s List',a:'John Williams',y:1993,lang:'int',dzId:4059007,st:'drama'},
-  {id:6,t:'The Dark Knight',a:'Hans Zimmer',y:2008,lang:'int',dzId:640612,st:'action'},
-  {id:7,t:'Interstellar',a:'Hans Zimmer',y:2014,lang:'int',dzId:89560714,st:'scifi'},
-  {id:8,t:'Pirates of the Caribbean',a:'Hans Zimmer',y:2003,lang:'int',dzId:1109828852,st:'adventure'},
-  {id:9,t:'Forrest Gump',a:'Alan Silvestri',y:1994,lang:'int',dzId:1109826742,st:'drama'},
-  {id:10,t:'Harry Potter',a:'John Williams',y:2001,lang:'int',dzId:1109734772,st:'fantasy'},
-  {id:11,t:'Indiana Jones',a:'John Williams',y:1981,lang:'int',dzId:1109732662,st:'adventure'},
-  {id:12,t:'Gladiator',a:'Hans Zimmer',y:2000,lang:'int',dzId:14729252,st:'epic'},
-  {id:13,t:'The Lord of the Rings',a:'Howard Shore',y:2001,lang:'int',dzId:1109839552,st:'fantasy'},
-  {id:14,t:'Back to the Future',a:'Alan Silvestri',y:1985,lang:'int',dzId:1109737992,st:'adventure'},
-  {id:15,t:'Mission: Impossible',a:'Lalo Schifrin',y:1996,lang:'int',dzId:14416922,st:'action'},
-  {id:16,t:'The Godfather',a:'Nino Rota',y:1972,lang:'int',dzId:3135556,st:'drama'},
-  {id:17,t:'James Bond - Goldfinger',a:'John Barry',y:1964,lang:'int',dzId:64516282,st:'action'},
-  {id:18,t:'Rocky',a:'Bill Conti',y:1976,lang:'int',dzId:4070267,st:'sport'},
-  {id:19,t:'E.T.',a:'John Williams',y:1982,lang:'int',dzId:1109731552,st:'fantasy'},
-  {id:20,t:'Jaws',a:'John Williams',y:1975,lang:'int',dzId:1109730442,st:'thriller'},
-  // Europeu
-  {id:101,t:'Cinema Paradiso',a:'Ennio Morricone',y:1988,lang:'eu',dzId:636850,st:'drama'},
-  {id:102,t:'The Good the Bad and the Ugly',a:'Ennio Morricone',y:1966,lang:'eu',dzId:1109840662,st:'western'},
-  {id:103,t:'Amélie',a:'Yann Tiersen',y:2001,lang:'eu',dzId:635494,st:'drama'},
-  {id:104,t:'La vita è bella',a:'Nicola Piovani',y:1997,lang:'eu',dzId:1109843882,st:'drama'},
-  {id:105,t:'Schindler\'s List',a:'John Williams',y:1993,lang:'eu',dzId:4059007,st:'drama'},
-  {id:106,t:'The Pianist',a:'Chopin / Kilar',y:2002,lang:'eu',dzId:1109845992,st:'drama'},
-  {id:107,t:'Il buono, il brutto, il cattivo',a:'Ennio Morricone',y:1966,lang:'eu',dzId:1109840662,st:'western'},
-  {id:108,t:'Das Boot',a:'Klaus Doldinger',y:1981,lang:'eu',dzId:1109846002,st:'war'},
-  // Espanyol
-  {id:201,t:'Bigas Luna - Jamón Jamón',a:'Nicola Piovani',y:1992,lang:'es',dzId:0,st:'drama'},
-  {id:202,t:'El laberinto del fauno',a:'Javier Navarrete',y:2006,lang:'es',dzId:1109850002,st:'fantasy'},
-  {id:203,t:'Todo sobre mi madre',a:'Alberto Iglesias',y:1999,lang:'es',dzId:0,st:'drama'},
-  {id:204,t:'Volver',a:'Alberto Iglesias',y:2006,lang:'es',dzId:0,st:'drama'},
-  // Català
-  {id:301,t:'Pa negre',a:'Sergi Casamitjana',y:2010,lang:'ca',dzId:0,st:'drama'},
-  {id:302,t:'El gran Gato',a:'Various',y:2023,lang:'ca',dzId:0,st:'comedy'},
-].filter(f=>f.dzId!==0||true); // keep all for structure
+  {id:1,t:'The Lion King',a:'Hans Zimmer',y:1994,lang:'int',dzId:422232432,st:'general',type:'film'},
+  {id:2,t:'Titanic',a:'James Horner',y:1997,lang:'int',dzId:14552280,st:'general',type:'film'},
+  {id:3,t:'Star Wars',a:'John Williams',y:1977,lang:'int',dzId:897455,st:'general',type:'film'},
+  {id:4,t:'Jurassic Park',a:'John Williams',y:1993,lang:'int',dzId:2296192,st:'general',type:'film'},
+  {id:5,t:"Schindler's List",a:'John Williams',y:1993,lang:'int',dzId:6066638,st:'general',type:'film'},
+  {id:6,t:'The Dark Knight',a:'Hans Zimmer',y:2008,lang:'int',dzId:904628,st:'general',type:'film'},
+  {id:7,t:'Interstellar',a:'Hans Zimmer',y:2014,lang:'int',dzId:1137370842,st:'general',type:'film'},
+  {id:8,t:'Pirates of the Caribbean',a:'Hans Zimmer',y:2003,lang:'int',dzId:1762557537,st:'general',type:'film'},
+  {id:9,t:'Forrest Gump',a:'Alan Silvestri',y:1994,lang:'int',dzId:17479922,st:'general',type:'film'},
+  {id:10,t:'Harry Potter',a:'John Williams',y:2001,lang:'int',dzId:661779,st:'general',type:'film'},
+  {id:11,t:'Top Gun: Maverick',a:'Harold Faltermeyer',y:2022,lang:'int',dzId:7675051,st:'general',type:'film'},
+  {id:12,t:'Gladiator',a:'Hans Zimmer',y:2000,lang:'int',dzId:3055975,st:'general',type:'film'},
+  {id:13,t:'The Lord of the Rings',a:'Howard Shore',y:2001,lang:'int',dzId:14628816,st:'general',type:'film'},
+  {id:14,t:'Back to the Future',a:'Alan Silvestri',y:1985,lang:'int',dzId:119871328,st:'general',type:'film'},
+  {id:15,t:'Mission: Impossible',a:'Lalo Schifrin',y:1996,lang:'int',dzId:129308090,st:'general',type:'film'},
+  {id:16,t:'The Godfather',a:'Nino Rota',y:1972,lang:'int',dzId:3969173141,st:'general',type:'film'},
+  {id:17,t:'James Bond - Goldfinger',a:'John Barry',y:1964,lang:'int',dzId:3093484,st:'general',type:'film'},
+  {id:18,t:'Rocky',a:'Survivor',y:1976,lang:'int',dzId:576431,st:'general',type:'film'},
+  {id:19,t:'E.T.',a:'John Williams',y:1982,lang:'int',dzId:93631702,st:'general',type:'film'},
+  {id:20,t:'Jaws',a:'John Williams',y:1975,lang:'int',dzId:93631710,st:'general',type:'film'},
+  {id:21,t:'The Avengers',a:'Alan Silvestri',y:2012,lang:'int',dzId:17840804,st:'general',type:'film'},
+  {id:22,t:'Inception',a:'Hans Zimmer',y:2010,lang:'int',dzId:6524423,st:'general',type:'film'},
+  {id:23,t:'Gravity',a:'Steven Price',y:2013,lang:'int',dzId:647272712,st:'general',type:'film'},
+  {id:24,t:'The Social Network',a:'Trent Reznor',y:2010,lang:'int',dzId:57428321,st:'general',type:'film'},
+  {id:25,t:'Dunkirk',a:'Hans Zimmer',y:2017,lang:'int',dzId:647839362,st:'general',type:'film'},
+  {id:26,t:'La La Land',a:'Justin Hurwitz',y:2016,lang:'int',dzId:137727927,st:'general',type:'film'},
+  {id:28,t:'Blade Runner 2049',a:'Hans Zimmer',y:2017,lang:'int',dzId:413733212,st:'general',type:'film'},
+  {id:29,t:'Dune',a:'Hans Zimmer',y:2021,lang:'int',dzId:1458338372,st:'general',type:'film'},
+  {id:30,t:'The Batman',a:'Michael Giacchino',y:2022,lang:'int',dzId:1676658747,st:'general',type:'film'},
+  {id:31,t:'The Matrix',a:'Don Davis',y:1999,lang:'int',dzId:119871440,st:'general',type:'film'},
+  {id:32,t:'Pulp Fiction',a:'Dick Dale',y:1994,lang:'int',dzId:3148811,st:'general',type:'film'},
+  {id:33,t:'Saving Private Ryan',a:'John Williams',y:1998,lang:'int',dzId:1108040,st:'general',type:'film'},
+  {id:34,t:'Toy Story',a:'Randy Newman',y:1995,lang:'int',dzId:696962792,st:'general',type:'film'},
+  {id:35,t:'Frozen',a:'Idina Menzel',y:2013,lang:'int',dzId:72371930,st:'general',type:'film'},
+  {id:36,t:'Dirty Dancing',a:'Bill Medley',y:1987,lang:'int',dzId:13128250,st:'general',type:'film'},
+  {id:37,t:'Grease',a:'John Travolta',y:1978,lang:'int',dzId:781563042,st:'general',type:'film'},
+  {id:38,t:'Saturday Night Fever',a:'Bee Gees',y:1977,lang:'int',dzId:427219162,st:'general',type:'film'},
+  {id:39,t:'Ghostbusters',a:'Ray Parker Jr.',y:1984,lang:'int',dzId:969252,st:'general',type:'film'},
+  {id:40,t:'Batman 1989',a:'Danny Elfman',y:1989,lang:'int',dzId:722927,st:'general',type:'film'},
+  {id:41,t:'Spirited Away',a:'Joe Hisaishi',y:2001,lang:'int',dzId:1120335972,st:'general',type:'film'},
+  {id:42,t:'Princess Mononoke',a:'Joe Hisaishi',y:1997,lang:'int',dzId:1120333772,st:'general',type:'film'},
+  {id:45,t:'Bohemian Rhapsody',a:'Queen',y:2018,lang:'int',dzId:571423942,st:'general',type:'film'},
+  {id:46,t:'8 Mile',a:'Eminem',y:2002,lang:'int',dzId:1109731,st:'general',type:'film'},
+  {id:48,t:'Coco',a:'Michael Giacchino',y:2017,lang:'int',dzId:1302333692,st:'general',type:'film'},
+  {id:49,t:'Spider-Man',a:'Danny Elfman',y:2002,lang:'int',dzId:15220573,st:'general',type:'film'},
+  {id:50,t:'The Dark Knight Rises',a:'Hans Zimmer',y:2012,lang:'int',dzId:2043656627,st:'general',type:'film'},
+  {id:101,t:'Cinema Paradiso',a:'Ennio Morricone',y:1988,lang:'eu',dzId:75643388,st:'general',type:'film'},
+  {id:102,t:'The Good the Bad and the Ugly',a:'Ennio Morricone',y:1966,lang:'eu',dzId:3089031,st:'general',type:'film'},
+  {id:103,t:'Amélie',a:'Yann Tiersen',y:2001,lang:'eu',dzId:1412033722,st:'general',type:'film'},
+  {id:104,t:'La vita è bella',a:'Nicola Piovani',y:1997,lang:'eu',dzId:11554108,st:'general',type:'film'},
+  {id:105,t:'Black Swan',a:'Clint Mansell',y:2010,lang:'eu',dzId:900437542,st:'general',type:'film'},
+  {id:107,t:'Once Upon a Time in the West',a:'Ennio Morricone',y:1968,lang:'eu',dzId:2285387,st:'general',type:'film'},
+  {id:108,t:'Intouchables',a:'Ludovico Einaudi',y:2011,lang:'eu',dzId:1457026152,st:'general',type:'film'},
+  {id:109,t:'La Dolce Vita',a:'Nino Rota',y:1960,lang:'eu',dzId:10129670,st:'general',type:'film'},
+  {id:112,t:'Requiem for a Dream',a:'Clint Mansell',y:2000,lang:'eu',dzId:5416678,st:'general',type:'film'},
+  {id:115,t:'Il Postino',a:'Luis Bacalov',y:1994,lang:'eu',dzId:2812657442,st:'general',type:'film'},
+  {id:118,t:'Notting Hill',a:'Elvis Costello',y:1999,lang:'eu',dzId:5079323,st:'general',type:'film'},
+  {id:119,t:'Love Actually',a:'Craig Armstrong',y:2003,lang:'eu',dzId:1540441122,st:'general',type:'film'},
+  {id:120,t:'Four Weddings and a Funeral',a:'Wet Wet Wet',y:1994,lang:'eu',dzId:2963317,st:'general',type:'film'},
+  {id:122,t:'The Artist',a:'Ludovic Bource',y:2011,lang:'eu',dzId:140718229,st:'general',type:'film'},
+  {id:124,t:'8 e mezzo',a:'Nino Rota',y:1963,lang:'eu',dzId:114694872,st:'general',type:'film'},
+  {id:125,t:'Oldboy',a:'Jo Yeong-wook',y:2003,lang:'eu',dzId:889847492,st:'general',type:'film'},
+  {id:126,t:'Let the Right One In',a:'Johan Soderqvist',y:2008,lang:'eu',dzId:1247903312,st:'general',type:'film'},
+  {id:127,t:'Dancer in the Dark',a:'Bjork',y:2000,lang:'eu',dzId:2629697012,st:'general',type:'film'},
+  {id:128,t:'The Full Monty',a:'Various',y:1997,lang:'eu',dzId:103121178,st:'general',type:'film'},
+  {id:132,t:'Perfume',a:'Johan Johannsson',y:2006,lang:'eu',dzId:3270658,st:'general',type:'film'},
+  {id:134,t:'Good Bye Lenin',a:'Yann Tiersen',y:2003,lang:'eu',dzId:3090545,st:'general',type:'film'},
+  {id:135,t:'Amelie Piano',a:'Yann Tiersen',y:2001,lang:'eu',dzId:767500042,st:'general',type:'film'},
+  {id:136,t:'Lock Stock',a:'Various',y:1998,lang:'eu',dzId:3912151,st:'general',type:'film'},
+  {id:138,t:'Crouching Tiger',a:'Tan Dun',y:2000,lang:'eu',dzId:13173694,st:'general',type:'film'},
+  {id:140,t:'My Neighbour Totoro',a:'Joe Hisaishi',y:1988,lang:'eu',dzId:1120340062,st:'general',type:'film'},
+  {id:202,t:'Mar adentro',a:'Alejandro Amenábar',y:2004,lang:'es',dzId:871107242,st:'general',type:'film'},
+  {id:203,t:'Volver',a:'Alberto Iglesias',y:2006,lang:'es',dzId:920598742,st:'general',type:'film'},
+  {id:204,t:'Todo sobre mi madre',a:'Alberto Iglesias',y:1999,lang:'es',dzId:2531032,st:'general',type:'film'},
+  {id:205,t:'Hable con ella',a:'Alberto Iglesias',y:2002,lang:'es',dzId:133647366,st:'general',type:'film'},
+  {id:206,t:'El orfanato',a:'Fernando Velázquez',y:2007,lang:'es',dzId:3835646,st:'general',type:'film'},
+  {id:207,t:'Celda 211',a:'Roque Baños',y:2009,lang:'es',dzId:3286914621,st:'general',type:'film'},
+  {id:208,t:'Abre los ojos',a:'Alejandro Amenábar',y:1997,lang:'es',dzId:888669102,st:'general',type:'film'},
+  {id:209,t:'Los otros',a:'Alejandro Amenábar',y:2001,lang:'es',dzId:70710237,st:'general',type:'film'},
+  {id:210,t:'Mujeres al borde',a:'Bernardo Bonezzi',y:1988,lang:'es',dzId:618593502,st:'general',type:'film'},
+  {id:212,t:'La lengua de las mariposas',a:'Alejandro Amenábar',y:1999,lang:'es',dzId:770087922,st:'general',type:'film'},
+  {id:216,t:'La mala educacion',a:'Alberto Iglesias',y:2004,lang:'es',dzId:1521086612,st:'general',type:'film'},
+  {id:224,t:'La isla minima',a:'Julio de la Rosa',y:2014,lang:'es',dzId:3247109181,st:'general',type:'film'},
+  {id:226,t:'Torrente',a:'Various',y:1998,lang:'es',dzId:3302572801,st:'general',type:'film'},
+  {id:227,t:'Tambien la lluvia',a:'Alberto Iglesias',y:2010,lang:'es',dzId:76882570,st:'general',type:'film'},
+  {id:229,t:'Los abrazos rotos',a:'Alberto Iglesias',y:2009,lang:'es',dzId:1521086582,st:'general',type:'film'},
+  {id:301,t:'Biutiful',a:'Gustavo Santaolalla',y:2010,lang:'ca',dzId:2836156662,st:'general',type:'film'},
+  {id:304,t:'El gran dictador',a:'Charles Chaplin',y:1940,lang:'ca',dzId:859200902,st:'general',type:'film'},
+  {id:305,t:'Jamon Jamon',a:'Nicola Piovani',y:1992,lang:'ca',dzId:2485177701,st:'general',type:'film'},
+  {id:309,t:'El cant dels ocells',a:'Pau Casals',y:1963,lang:'ca',dzId:64393658,st:'general',type:'film'},
+]; // keep all for structure
 
+
+const SERIES=[
+  {id:501,t:'Game of Thrones',a:'Ramin Djawadi',y:2011,lang:'int',dzId:127563039,type:'serie'},
+  {id:503,t:'Breaking Bad',a:'Dave Porter',y:2008,lang:'int',dzId:69838319,type:'serie'},
+  {id:504,t:'The Mandalorian',a:'Ludwig Goransson',y:2019,lang:'int',dzId:798742662,type:'serie'},
+  {id:505,t:'Squid Game',a:'Jung Jae-il',y:2021,lang:'int',dzId:1744505937,type:'serie'},
+  {id:506,t:'Lost',a:'Michael Giacchino',y:2004,lang:'int',dzId:1157011012,type:'serie'},
+  {id:507,t:'The Crown',a:'Hans Zimmer',y:2016,lang:'int',dzId:135370914,type:'serie'},
+  {id:508,t:'Peaky Blinders',a:'Nick Cave',y:2013,lang:'int',dzId:3782900242,type:'serie'},
+  {id:509,t:'Twin Peaks',a:'Angelo Badalamenti',y:1990,lang:'int',dzId:7337260,type:'serie'},
+  {id:510,t:'The Sopranos',a:'Alabama 3',y:1999,lang:'int',dzId:2629600512,type:'serie'},
+  {id:512,t:'Succession',a:'Nicholas Britell',y:2018,lang:'int',dzId:890421312,type:'serie'},
+  {id:513,t:'The X-Files',a:'Mark Snow',y:1993,lang:'int',dzId:927545,type:'serie'},
+  {id:516,t:"Grey's Anatomy",a:'Various',y:2005,lang:'int',dzId:1281417182,type:'serie'},
+  {id:517,t:'CSI',a:'The Who',y:2000,lang:'int',dzId:11118881,type:'serie'},
+  {id:518,t:'The Wire',a:'Tom Waits',y:2002,lang:'int',dzId:2960489,type:'serie'},
+  {id:520,t:'True Detective',a:'The Handsome Family',y:2014,lang:'int',dzId:134819392,type:'serie'},
+  {id:521,t:'Black Mirror',a:'Various',y:2011,lang:'int',dzId:11219974,type:'serie'},
+  {id:522,t:'Westworld',a:'Ramin Djawadi',y:2016,lang:'int',dzId:647367982,type:'serie'},
+  {id:523,t:'The Walking Dead',a:'Bear McCreary',y:2010,lang:'int',dzId:65174008,type:'serie'},
+  {id:524,t:'Euphoria',a:'Labrinth',y:2019,lang:'int',dzId:723289462,type:'serie'},
+  {id:526,t:'Sherlock',a:'David Arnold',y:2010,lang:'int',dzId:16108525,type:'serie'},
+  {id:527,t:'Doctor Who',a:'Ron Grainer',y:1963,lang:'int',dzId:1251123712,type:'serie'},
+  {id:528,t:'Firefly',a:'Joss Whedon',y:2002,lang:'int',dzId:71413786,type:'serie'},
+  {id:529,t:'Battlestar Galactica',a:'Bear McCreary',y:2004,lang:'int',dzId:1869288097,type:'serie'},
+  {id:530,t:'Downton Abbey',a:'John Lunn',y:2010,lang:'int',dzId:2790670212,type:'serie'},
+  {id:531,t:'Band of Brothers',a:'Michael Kamen',y:2001,lang:'int',dzId:70784957,type:'serie'},
+  {id:540,t:'Friends',a:'The Rembrandts',y:1994,lang:'int',dzId:769477,type:'serie'},
+  {id:541,t:'The Simpsons',a:'Danny Elfman',y:1989,lang:'int',dzId:45272561,type:'serie'},
+  {id:542,t:'Seinfeld',a:'Jonathan Wolff',y:1989,lang:'int',dzId:1405392702,type:'serie'},
+  {id:544,t:'The Fresh Prince of Bel-Air',a:'DJ Jazzy Jeff',y:1990,lang:'int',dzId:368141111,type:'serie'},
+  {id:545,t:'Baywatch',a:'Jimi Jamison',y:1989,lang:'int',dzId:584411,type:'serie'},
+  {id:546,t:'Knight Rider',a:'Glen Larson',y:1982,lang:'int',dzId:28250791,type:'serie'},
+  {id:547,t:'Miami Vice',a:'Jan Hammer',y:1984,lang:'int',dzId:508094702,type:'serie'},
+  {id:548,t:'MacGyver',a:'Randy Edelman',y:1985,lang:'int',dzId:25237021,type:'serie'},
+  {id:549,t:'The A-Team',a:'Mike Post',y:1983,lang:'int',dzId:17955553,type:'serie'},
+  {id:550,t:'Beverly Hills 90210',a:'John Davis',y:1990,lang:'int',dzId:115899860,type:'serie'},
+  {id:560,t:'Dragon Ball Z',a:'Shunsuke Kikuchi',y:1989,lang:'int',dzId:3024663401,type:'serie'},
+  {id:561,t:'Dragon Ball',a:'Shunsuke Kikuchi',y:1986,lang:'int',dzId:3024663391,type:'serie'},
+  {id:562,t:'Dragon Ball Super',a:'Norihito Sumitomo',y:2015,lang:'int',dzId:105016176,type:'serie'},
+  {id:566,t:'Cavallers del Zodiac',a:'Make-Up',y:1986,lang:'int',dzId:644154722,type:'serie'},
+  {id:568,t:'Pokemon',a:'Jason Paige',y:1997,lang:'int',dzId:2381559005,type:'serie'},
+  {id:569,t:'Digimon',a:'Udi Harpaz',y:1999,lang:'int',dzId:1708368997,type:'serie'},
+  {id:570,t:'Sailor Moon',a:'Moonlight Densetsu',y:1992,lang:'int',dzId:135836046,type:'serie'},
+  {id:571,t:'Naruto',a:'Flow',y:2002,lang:'int',dzId:517770322,type:'serie'},
+  {id:572,t:'One Piece',a:'Hiroshi Kitadani',y:1999,lang:'int',dzId:3033808841,type:'serie'},
+  {id:573,t:'Attack on Titan',a:'Linked Horizon',y:2013,lang:'int',dzId:80386418,type:'serie'},
+  {id:574,t:'Death Note',a:'Nightmare',y:2006,lang:'int',dzId:2665292502,type:'serie'},
+  {id:575,t:'Neon Genesis Evangelion',a:'Yoko Takahashi',y:1995,lang:'int',dzId:889803782,type:'serie'},
+  {id:579,t:'Candy Candy',a:'Various',y:1976,lang:'int',dzId:84041905,type:'serie'},
+  {id:580,t:'Mazinger Z',a:'Ichiro Mizuki',y:1972,lang:'int',dzId:431031002,type:'serie'},
+  {id:581,t:'Dragon Ball GT',a:'Various',y:1996,lang:'int',dzId:2589935952,type:'serie'},
+  {id:583,t:'Buffy the Vampire Slayer',a:'Nerf Herder',y:1997,lang:'int',dzId:509476412,type:'serie'},
+  {id:584,t:'Charmed',a:'Love Spit Love',y:1998,lang:'int',dzId:64682146,type:'serie'},
+  {id:585,t:'Star Trek',a:'Alexander Courage',y:1966,lang:'int',dzId:5741011,type:'serie'},
+  {id:586,t:'24',a:'Sean Callery',y:2001,lang:'int',dzId:891160232,type:'serie'},
+  {id:587,t:'Prison Break',a:'Ramin Djawadi',y:2005,lang:'int',dzId:936579482,type:'serie'},
+  {id:588,t:'Homeland',a:'Sean Callery',y:2011,lang:'int',dzId:2521148371,type:'serie'},
+  {id:589,t:'The Big Bang Theory',a:'Barenaked Ladies',y:2007,lang:'int',dzId:13805986,type:'serie'},
+  {id:590,t:'Sex and the City',a:'Various',y:1998,lang:'int',dzId:4315934,type:'serie'},
+  {id:591,t:'Gossip Girl',a:'Various',y:2007,lang:'int',dzId:26344981,type:'serie'},
+  {id:592,t:'Power Rangers',a:'Various',y:1993,lang:'int',dzId:2352147475,type:'serie'},
+  {id:593,t:'The Flintstones',a:'Various',y:1960,lang:'int',dzId:74008319,type:'serie'},
+  {id:594,t:'SpongeBob',a:'Various',y:1999,lang:'int',dzId:2958441,type:'serie'},
+  {id:595,t:'Futurama',a:'Christopher Tyng',y:1999,lang:'int',dzId:913656212,type:'serie'},
+  {id:596,t:'Family Guy',a:'Seth MacFarlane',y:1999,lang:'int',dzId:722081642,type:'serie'},
+  {id:600,t:'Dark',a:'Ben Frost',y:2017,lang:'eu',dzId:461878722,type:'serie'},
+  {id:602,t:'Emily in Paris',a:'Various',y:2020,lang:'eu',dzId:1592394401,type:'serie'},
+  {id:607,t:'The Bridge',a:'Various',y:2011,lang:'eu',dzId:2996629071,type:'serie'},
+  {id:608,t:'Babylon Berlin',a:'Bryan Ferry',y:2017,lang:'eu',dzId:3690005332,type:'serie'},
+  {id:609,t:'Suburra',a:'Giuliano Taviani',y:2017,lang:'eu',dzId:2511056551,type:'serie'},
+  {id:612,t:'Inspector Rex',a:'Erwin Halletz',y:1994,lang:'eu',dzId:84613107,type:'serie'},
+  {id:614,t:'Broadchurch',a:'Olafur Arnalds',y:2013,lang:'eu',dzId:92830742,type:'serie'},
+  {id:700,t:'La Casa de Papel',a:'Cecilio G.',y:2017,lang:'es',dzId:3220819551,type:'serie'},
+];
 const FILMS_BY_LANG={
-  int:FILMS.filter(f=>f.lang==='int'),
-  eu:FILMS.filter(f=>f.lang==='eu'),
-  es:FILMS.filter(f=>f.lang==='es'),
-  ca:FILMS.filter(f=>f.lang==='ca'),
+  int:FILMS.filter(f=>f.lang==='int'&&f.dzId&&f.dzId!==0),
+  eu:FILMS.filter(f=>f.lang==='eu'&&f.dzId&&f.dzId!==0),
+  es:FILMS.filter(f=>f.lang==='es'&&f.dzId&&f.dzId!==0),
+  ca:FILMS.filter(f=>f.lang==='ca'&&f.dzId&&f.dzId!==0),
+};
+const SERIES_BY_LANG={
+  int:SERIES.filter(s=>s.lang==='int'&&s.dzId&&s.dzId!==0),
+  eu:SERIES.filter(s=>s.lang==='eu'&&s.dzId&&s.dzId!==0),
+  es:SERIES.filter(s=>s.lang==='es'&&s.dzId&&s.dzId!==0),
+  ca:SERIES.filter(s=>s.lang==='ca'&&s.dzId&&s.dzId!==0),
+};
+const FREE_BY_LANG={
+  int:[...FILMS,...SERIES].filter(f=>f.lang==='int'&&f.dzId&&f.dzId!==0),
+  eu:[...FILMS,...SERIES].filter(f=>f.lang==='eu'&&f.dzId&&f.dzId!==0),
+  es:[...FILMS,...SERIES].filter(f=>f.lang==='es'&&f.dzId&&f.dzId!==0),
+  ca:[...FILMS,...SERIES].filter(f=>f.lang==='ca'&&f.dzId&&f.dzId!==0),
 };
 
 // ── GAME STATE ──
@@ -443,6 +582,7 @@ function renderMenu(){
   document.getElementById('m-hello').textContent=`${t.hello} ${G.nick}!`;
   document.getElementById('m-zone').textContent=t.zones?.find(z=>z.id===G.lang)?.label||'';
   document.getElementById('m-btn-daily').textContent=t.daily;
+  const _sb=document.getElementById('m-btn-daily-serie');if(_sb)_sb.textContent=t.dailySerie||'📺 Sèrie del dia';
   document.getElementById('m-btn-free').textContent=t.free;
   document.getElementById('m-btn-autor').textContent=t.autor;
   document.getElementById('m-btn-challenge').textContent=t.challenge;
@@ -454,8 +594,17 @@ function onDaily(){
   G.mode='daily';
   initGame(seededShuffle(pool,today.split('').reduce((a,c)=>a+c.charCodeAt(0),0)),'daily');
 }
+function onDailySerie(){
+  const today=new Date().toISOString().slice(0,10);
+  const key='cn:daily_serie:'+G.lang+':'+today;
+  if(localStorage.getItem(key)==='1'){toast(T[G.lang].dailyPlayed||"Ja has jugat la sèrie d'avui!");return}
+  const pool=(SERIES_BY_LANG[G.lang]||[]).filter(s=>s.dzId&&s.dzId!==0);
+  if(pool.length<4){toast("Catàleg de sèries insuficient per a aquest idioma");return}
+  G.mode='daily_serie';
+  initGame(seededShuffle(pool,(today+'s').split('').reduce((a,c)=>a+c.charCodeAt(0),0)),'daily_serie');
+}
 function onFree(){
-  const pool=(FILMS_BY_LANG[G.lang]||[]).filter(f=>f.dzId&&f.dzId!==0);
+  const pool=(FREE_BY_LANG[G.lang]||FILMS_BY_LANG[G.lang]||[]).filter(f=>f.dzId&&f.dzId!==0);
   G.mode='free';
   initGame(seededShuffle(pool,Math.floor(Math.random()*999999)),'free');
 }
@@ -544,9 +693,10 @@ function endGame(){
   stopAll();addTotalScore(G.score);
   const today=new Date().toISOString().slice(0,10);
   if(G.mode==='daily')localStorage.setItem(`cn:daily_cine:${G.lang}:${today}`,'1');
+  if(G.mode==='daily_serie')localStorage.setItem(`cn:daily_serie:${G.lang}:${today}`,'1');
   const t=T[G.lang];
   const pct=G.results.filter(r=>r==='ok').length/10;
-  document.getElementById('go-emoji').textContent=pct>=0.8?'🏆':pct>=0.5?'🎬':'🎟️';
+  const isSerie=G.mode==='daily_serie';document.getElementById('go-emoji').textContent=pct>=0.8?'🏆':pct>=0.5?(isSerie?'📺':'🎬'):(isSerie?'📺':'🎟️');
   document.getElementById('go-title').textContent=pct>=0.8?'Cineasta expert!':pct>=0.5?'Bona partida!':'Segueix intentant-ho!';
   document.getElementById('go-sub').textContent=`${G.results.filter(r=>r==='ok').length}/10 pel·lícules encertades`;
   document.getElementById('go-score').textContent=G.score;
@@ -593,6 +743,15 @@ window.addEventListener('load',()=>{
   initCinematicSplash();
 });
 window.addEventListener('resize',()=>{const cv=document.getElementById('splash-canvas');if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}});
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .catch(e=>console.log('SW error:',e));
+  });
+}
 </script>
 </body>
 </html>
