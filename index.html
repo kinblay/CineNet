@@ -96,6 +96,27 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
 </div>
 
 <!-- LANG / ZONE SELECTOR -->
+<div id="s-login" class="scr">
+  <div class="logo">Cine<b>Net</b></div>
+  <div class="sub">🎬 Endevina la banda sonora</div>
+  <div class="card" id="login-card-email" style="width:100%;max-width:400px;background:var(--card);border:1px solid rgba(212,160,23,.2);border-radius:18px;padding:28px 24px">
+    <div style="text-align:center;margin-bottom:18px"><div style="font-size:2.5rem;margin-bottom:8px">🎬</div><div style="font-weight:700;font-size:1.1rem;margin-bottom:6px">Entra a CineNet</div><div style="font-size:.82rem;color:var(--muted);line-height:1.7">Posa el teu correu i et enviarem un codi de 6 dígits.</div></div>
+    <div style="margin-bottom:12px"><label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:6px">Correu electrònic</label><input id="login-email" type="email" placeholder="correu@exemple.com" autocomplete="email" style="width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:13px 16px;color:var(--text);font-size:1rem;outline:none"></div>
+    <button class="btn btn-gold" id="login-btn" onclick="onSendOtp()">Enviar codi 🎬</button>
+    <div style="text-align:center;margin-top:10px"><span style="font-size:.75rem;color:var(--muted)">En entrar acceptes les condicions d'ús</span></div>
+  </div>
+  <div class="card" id="login-card-sent" style="display:none;width:100%;max-width:400px;background:var(--card);border:1px solid rgba(212,160,23,.2);border-radius:18px;padding:28px 24px;text-align:center">
+    <div style="font-size:2.5rem;margin-bottom:12px">📧</div>
+    <div style="font-weight:700;font-size:1.1rem;margin-bottom:8px">Email enviat!</div>
+    <div style="font-size:.85rem;color:var(--muted);line-height:1.8" id="login-sent-desc"></div>
+    <div style="margin-top:18px;display:flex;justify-content:center"><input id="login-otp-input" type="tel" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" placeholder="000000" style="width:180px;text-align:center;font-size:1.8rem;font-weight:900;letter-spacing:12px;background:rgba(255,255,255,.06);border:2px solid var(--gold);border-radius:12px;padding:14px 8px;color:var(--gold);outline:none" oninput="if(this.value.length===6)onVerifyOtp()"></div>
+    <button class="btn btn-gold" id="login-verify-btn" onclick="onVerifyOtp()" style="margin-top:14px">✅ Verificar codi</button>
+    <div style="margin-top:16px;padding:12px;background:rgba(212,160,23,.1);border-radius:10px;font-size:.78rem;color:var(--gold)">Revisa la carpeta de spam</div>
+    <button class="btn btn-ghost" onclick="onResentEmail()" style="margin-top:10px">Reenviar codi</button>
+    <button class="btn btn-ghost" onclick="resetLoginForm()" style="font-size:.78rem;padding:10px">← Canviar correu</button>
+  </div>
+</div>
+
 <div id="s-zone" class="scr">
   <div class="logo">Cine<b>Net</b></div>
   <div class="sub">🎬 Endevina la banda sonora</div>
@@ -210,10 +231,21 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
 
 // ── SUPABASE ──
 const SB_URL='https://ikfouhxdtkptafglthmd.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlrb3VoeGR0a3B0YWZnbHRobWQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcxMDAwMDAwMCwiZXhwIjoyMDI1NjE2MDAwfQ.placeholder';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlrb3VoeGR0a3B0YWZnbHRobWQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc3NjAyNjkxOSwiZXhwIjoyMDkxNjAyOTE5fQ.j1GM0Ec2w_gDlRMHAoOk6LUdgX5YUYXpXp9ULX0kkJQ';
 async function sbFetch(path,opts={}){
   try{const r=await fetch(SB_URL+path,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',...(opts.headers||{})},...opts});return r.ok?await r.json():null}catch(e){return null}
 }
+
+const SBH={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+async function sbS(table,filter='',order='',limit=100){try{let url=`${SB_URL}/rest/v1/${table}?limit=${limit}`;if(filter)url+=`&${filter}`;if(order)url+=`&order=${order}`;const r=await fetch(url,{headers:SBH});if(!r.ok)return[];return await r.json()}catch(e){return[]}}
+async function sbI(table,row){try{const r=await fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{...SBH,'Prefer':'return=minimal'},body:JSON.stringify(row)});return r.ok}catch(e){return false}}
+
+// Rate limiter
+const RL={_d:{},check(k,max,ms){const n=Date.now(),d=this._d[k]||[];this._d[k]=d.filter(t=>n-t<ms);if(this._d[k].length>=max)return false;this._d[k].push(n);return true}};
+const canBustia=()=>RL.check('bu',5,60*60*1000);
+
+// Input validation
+const V={nick(v){if(!v||typeof v!=='string')return{ok:false,e:'Nom obligatori'};const s=v.trim();if(s.length<1||s.length>20)return{ok:false,e:'1-20 caràcters'};if(!/^[\w\s\-àáèéíïòóúüçÀÁÈÉÍÏÒÓÚÜÇ·]+$/u.test(s))return{ok:false,e:'Caràcters no permesos'};return{ok:true,val:s}},email(v){if(!v||v.trim()==='')return{ok:true,val:null};const s=v.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s))return{ok:false,e:'Email invàlid'};return{ok:true,val:s}}};
 
 // ── TRANSLATIONS ──
 const T={
@@ -548,7 +580,63 @@ function initCinematicSplash(){
   cv.addEventListener('click',()=>{try{const c=new(window.AudioContext||window.webkitAudioContext)();actx=c;const t=c.currentTime;const mel=[261.63,329.63,392,523.25,659.25,783.99,1046.5];mel.forEach((f,i)=>{playNote(c,f,t+i*0.13,0.5,0.12,'triangle')});playNote(c,1046.5,t+0.9,1.0,0.18,'triangle')}catch(e){}},{once:true});
   animId=requestAnimationFrame(tick);
 }
-function exitSplash(){splashDone=true;const lang=localStorage.getItem('cn:lang_cine')||null;if(lang){G.lang=lang;G.nick=localStorage.getItem('cn:nick_cine')||'';go('s-menu');renderMenu()}else{go('s-zone');renderZoneScreen()}}
+// ── AUTH OTP ──
+async function sendOtp(email){
+  try{const r=await fetch(`${SB_URL}/auth/v1/otp`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({email:email.trim().toLowerCase(),create_user:true})});if(!r.ok){const err=await r.json().catch(()=>({}));return{ok:false,msg:err.msg||err.message||`Error ${r.status}`}}return{ok:true}}catch(e){return{ok:false,msg:'Error de connexió'}}
+}
+async function verifyOtp(email,token){
+  try{const r=await fetch(`${SB_URL}/auth/v1/otp`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY},body:JSON.stringify({email:email.trim().toLowerCase(),token:String(token).trim(),type:'email'})});const data=await r.json().catch(()=>({}));if(!r.ok)return{ok:false,msg:data.msg||data.message||data.error_description||'Codi invàlid o caducat'};if(data.access_token){const key=`sb-${SB_URL.split('//')[1].split('.')[0]}-auth-token`;localStorage.setItem(key,JSON.stringify({access_token:data.access_token,refresh_token:data.refresh_token,expires_at:Date.now()+2592000000}));return{ok:true,session:data}}return{ok:false,msg:'Resposta inesperada'}}catch(e){return{ok:false,msg:'Error de connexió'}}
+}
+async function loadUserProfile(user){
+  try{const r=await sbS('profiles',`email=eq.${encodeURIComponent(user.email)}`,'created_at.desc',1);if(r&&r.length){const p=r[0];G.nick=p.nick;G.zone=p.zona||'';G.lang=p.lang||'int';localStorage.setItem(`cn:profile_cine:${user.email}`,JSON.stringify({nick:p.nick,zone:p.zona,lang:p.lang,ts:Date.now()}));return p}}catch(e){}
+  try{const s=localStorage.getItem(`cn:profile_cine:${user.email||''}`);if(s){const p=JSON.parse(s);G.nick=p.nick||'';G.zone=p.zone||'';G.lang=p.lang||'int';return p}}catch(e){}
+  return null
+}
+async function saveProfileToSupabase(email){
+  const row={email:email.toLowerCase(),nick:G.nick,zona:G.zone,lang:G.lang,updated_at:new Date().toISOString()};
+  try{const existing=await sbS('profiles',`email=eq.${encodeURIComponent(email.toLowerCase())}`,'created_at.desc',1);if(existing&&existing.length){await fetch(`${SB_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email.toLowerCase())}`,{method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},body:JSON.stringify(row)})}else{await sbI('profiles',row)}}catch(e){}
+}
+async function signOut(){Object.keys(localStorage).filter(k=>k.includes('auth-token')||k.includes('sb-')).forEach(k=>localStorage.removeItem(k));localStorage.removeItem('cn:user-email-cine');G.nick='';G.zone='';go('s-menu');renderMenu();toast('👋 Sessió tancada')}
+
+let lastEmailSent='';
+async function onSendOtp(){
+  const email=document.getElementById('login-email').value.trim();
+  const ev=V.email(email);if(!ev.ok||!email)return toast('⚠️ Posa un correu vàlid');
+  const btn=document.getElementById('login-btn');btn.disabled=true;btn.textContent='Enviant...';
+  const res=await sendOtp(email);
+  btn.disabled=false;btn.textContent='Enviar codi 🎬';
+  if(res.ok){lastEmailSent=email;localStorage.setItem('cn:user-email-cine',email);document.getElementById('login-card-email').style.display='none';document.getElementById('login-card-sent').style.display='block';document.getElementById('login-sent-desc').textContent=`Hem enviat un codi de 6 dígits a ${email}. Caduca en 10 minuts.`;setTimeout(()=>document.getElementById('login-otp-input')?.focus(),300);}
+  else toast('⚠️ '+(res.msg||'Error'));
+}
+async function onVerifyOtp(){
+  const otp=document.getElementById('login-otp-input').value.trim();
+  if(!otp||otp.length!==6)return toast('⚠️ El codi té 6 dígits');
+  const btn=document.getElementById('login-verify-btn');btn.disabled=true;btn.textContent='Verificant...';
+  const res=await verifyOtp(lastEmailSent,otp);
+  btn.disabled=false;btn.textContent='✅ Verificar codi';
+  if(res.ok){
+    const email=lastEmailSent;localStorage.setItem('cn:user-email-cine',email);
+    const p=await loadUserProfile({email});
+    if(p&&p.nick&&p.zona){G.lang=p.lang||'int';renderMenu();go('s-menu');toast(`👋 Benvingut, ${G.nick}!`)}
+    else{G.lang=localStorage.getItem('cn:lang_cine')||'int';go('s-zone');renderZoneScreen()}
+  }else toast('⚠️ '+(res.msg||'Codi invàlid'));
+}
+async function onResentEmail(){if(!lastEmailSent)return;await sendOtp(lastEmailSent);toast('📧 Codi reenviat!');document.getElementById('login-otp-input').value='';}
+function resetLoginForm(){document.getElementById('login-card-email').style.display='block';document.getElementById('login-card-sent').style.display='none';document.getElementById('login-email').value=''}
+
+// ── INIT ──
+async function appInit(){
+  // Sessió existent?
+  const email=localStorage.getItem('cn:user-email-cine');
+  if(email){
+    const p=await loadUserProfile({email});
+    if(p&&p.nick&&p.zona){G.lang=p.lang||'int';initSplash();return}
+  }
+  // Usuari nou → splash → login
+  initSplash();
+}
+
+function exitSplash(){splashDone=true;const email=localStorage.getItem('cn:user-email-cine');if(email){const cached=localStorage.getItem(`cn:profile_cine:${email}`);if(cached){try{const p=JSON.parse(cached);if(p.nick&&p.zone){G.nick=p.nick;G.zone=p.zone;G.lang=p.lang||'int';go('s-menu');renderMenu();return}}catch(e){}}go('s-login');return}const lang=localStorage.getItem('cn:lang_cine');if(lang&&localStorage.getItem('cn:nick_cine')){G.lang=lang;G.nick=localStorage.getItem('cn:nick_cine')||'';go('s-menu');renderMenu()}else go('s-login')}
 
 // ── ZONE SCREEN ──
 function renderZoneScreen(){
@@ -618,6 +706,8 @@ function initGame(list,mode){
   list=list.filter(f=>f.dzId&&f.dzId!==0);
   if(list.length<4){toast('Catàleg insuficient per a aquest mode');return}
   G.lvl=1;G.lives=3;G.score=0;G.active=true;G.mode=mode;G.filmList=list;G.filmIdx=0;G.results=[];G.film=null;
+  telStartSession();telTrackEvent('start_game',{mode,lang:G.lang});
+  pushNavState();
   go('s-game');renderGame();startLevel();
 }
 function renderGame(){
@@ -657,7 +747,7 @@ function onPlay(){
 function ytStop(silent){clearTimeout(ytStopTimer);dzStop();if(!silent)onSegEnd()}
 function onSegEnd(){document.getElementById('g-play').textContent='▶'}
 function stopAll(){clearInterval(G.timerInt);ytStop(true)}
-function onTimeout(){if(!G.active)return;G.active=false;stopAll();G.lives--;G.results[G.lvl-1]='fail';toast(T[G.lang].wrong);revealAnswer();setTimeout(()=>nextLvl(),1800)}
+function onTimeout(){if(!G.active)return;G.active=false;stopAll();G.lives--;G.results[G.lvl-1]='fail';telTrackRound(G.lvl-1,G.film?.id,'fail',G.tMax-G.tLeft);toast(T[G.lang].wrong);revealAnswer();setTimeout(()=>nextLvl(),1800)}
 function onChoice(filmId){
   if(!G.active)return;
   if(filmId===G.film.id)onCorrect();else onWrong();
@@ -666,6 +756,7 @@ function onCorrect(){
   if(!G.active)return;G.active=false;stopAll();
   const pts=100+G.tLeft*2+G.lvl*25;soundCorrect();
   G.score+=pts;G.results[G.lvl-1]='ok';
+  telTrackRound(G.lvl-1,G.film?.id,'ok',G.tMax-G.tLeft);
   toast(`${T[G.lang].correct} +${pts}`);
   // Highlight correct
   document.querySelectorAll('.choice-btn').forEach(btn=>{if(btn.textContent.includes(G.film.t))btn.classList.add('correct')});
@@ -675,6 +766,7 @@ function onCorrect(){
 function onWrong(){
   if(!G.active)return;G.active=false;stopAll();soundWrong();
   G.lives--;G.results[G.lvl-1]='fail';
+  telTrackRound(G.lvl-1,G.film?.id,'fail',G.tMax-G.tLeft);
   toast(T[G.lang].wrong);revealAnswer();
   document.getElementById('g-lives').textContent='❤️'.repeat(Math.max(0,G.lives))+'🖤'.repeat(Math.max(0,3-G.lives));
   setTimeout(()=>nextLvl(),1800);
@@ -691,6 +783,7 @@ function nextLvl(){
 }
 function endGame(){
   stopAll();addTotalScore(G.score);
+  telSaveSession(true);telTrackEvent('share',{score:G.score,mode:G.mode});
   const today=new Date().toISOString().slice(0,10);
   if(G.mode==='daily')localStorage.setItem(`cn:daily_cine:${G.lang}:${today}`,'1');
   if(G.mode==='daily_serie')localStorage.setItem(`cn:daily_serie:${G.lang}:${today}`,'1');
@@ -732,17 +825,52 @@ function onListenFull(){if(!G.film)return;if(G.film.dzId&&G.film.dzId!==0){const
 function onCreateChallenge(){toast('Repte pròximament!')}
 function loadPendingChallenges(){toast('Pròximament!')}
 
-// ── BACK BUTTON ──
-window.addEventListener('popstate',()=>{const cur=document.querySelector('.scr.on');if(cur&&cur.id!=='s-menu'&&cur.id!=='s-splash'&&cur.id!=='s-zone'){go('s-menu');renderMenu()}});
-document.querySelectorAll('.scr').forEach(s=>s.addEventListener('touchstart',()=>{history.pushState({},'','');},{once:true}));
+// ── TELEMETRIA ──
+let _sessionId=null,_sessionStart=0,_roundData=[];
+function telStartSession(){_sessionId='cine_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);_sessionStart=Date.now();_roundData=[];}
+function telTrackRound(levelIdx,filmId,result,timeSpent){_roundData.push({level:levelIdx+1,film_id:filmId,result,time_spent:timeSpent});}
+async function telSaveSession(completed){
+  if(!_sessionId)return;
+  try{
+    const duration=Math.round((Date.now()-_sessionStart)/1000);
+    const ok=G.results.filter(r=>r==='ok').length;
+    await sbI('game_sessions',{session_id:_sessionId,nick:G.nick?G.nick.substring(0,20):'Anònim',lang:G.lang,zona:G.zone||'',mode:'cine_'+G.mode,style:null,score:G.score,levels_reached:G.lvl,correct_count:ok,completed,abandoned_at_level:completed?null:G.lvl,duration_secs:duration,played_at:new Date().toISOString()});
+    if(_roundData.length>0){for(const r of _roundData){await sbI('game_rounds',{session_id:_sessionId,nick:G.nick?G.nick.substring(0,20):'Anònim',lang:G.lang,mode:'cine_'+G.mode,level:r.level,song_id:r.film_id,result:r.result,time_spent:r.time_spent});}}
+  }catch(e){}
+  _sessionId=null;
+}
+async function telTrackEvent(type,extra={}){
+  try{await sbI('user_events',{nick:G.nick?G.nick.substring(0,20):'Anònim',lang:G.lang,mode:G.mode||null,event_type:'cine_'+type,extra:JSON.stringify(extra),created_at:new Date().toISOString()});}catch(e){}
+}
+
+// ── BACK BUTTON (complet) ──
+function pushNavState(){history.pushState({cinenet:true},'','');}
+window.addEventListener('popstate',function(e){
+  const cur=document.querySelector('.scr.on');
+  if(!cur)return;
+  if(cur.id==='s-game'&&G.active){
+    if(confirm('Vols abandonar la partida?')){
+      stopAll();G.active=false;
+      telSaveSession(false);telTrackEvent('abandon',{level:G.lvl,mode:G.mode});
+      go('s-menu');renderMenu();
+    }else{pushNavState();}
+    return;
+  }
+  if(cur.id==='s-game'||cur.id==='s-gameover'){go('s-menu');renderMenu();return;}
+  if(cur.id==='s-zone'||cur.id==='s-login'){return;}
+  if(cur.id!=='s-menu'&&cur.id!=='s-splash'){go('s-menu');renderMenu();}
+});
 
 // ── INIT ──
 window.addEventListener('load',()=>{
   const cv=document.getElementById('splash-canvas');
   cv.width=window.innerWidth;cv.height=window.innerHeight;
-  initCinematicSplash();
+  appInit();
 });
 window.addEventListener('resize',()=>{const cv=document.getElementById('splash-canvas');if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}});
+
+function initSplash(){initCinematicSplash();}
+
 </script>
 
 <script>
